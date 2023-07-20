@@ -1,4 +1,3 @@
-from datetime import datetime
 from tortoise import Model
 from tortoise.fields.data import IntEnumFieldInstance, CharEnumField
 from tortoise.fields.relational import BackwardFKRelation, ForeignKeyFieldInstance, ManyToManyFieldInstance

@@ -58,11 +58,23 @@ class Admin(Api):
             'title': model.__name__,
             'subtitle': model._meta.table_description,
             'request': request,
-            'fields': model._meta.fields_map
+            'fields': {k: v for k, v in model._meta.fields_map.items() if not k.endswith('_id')}
         })
 
     async def dt(self, request: Request):
+        def render(dct: dict):
+            def rel(val: dict):
+                return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
+            def check(val):
+                if isinstance(val, dict) and 'repr' in val.keys():
+                    return rel(val)
+                elif isinstance(val, list) and val and isinstance(val[0], dict) and 'repr' in val[0].keys():
+                    return ' '.join(rel(v) for v in val)
+                return val
+
+            return [check(val) for key, val in dct.items()]
+
         model: Model = self._get_model(request)
         objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields)
-        data = [list(jsonify(obj).values()) for obj in objects]
+        data = [render(jsonify(obj)) for obj in objects]
         return JSONResponse({'data': data})

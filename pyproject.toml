@@ -4,11 +4,15 @@ requires-python = ">=3.9"
 authors = [
     {name = "Artemiev", email = "mixartemev@gmail.com"},
 ]
+keywords = ["starlette", "fastapi", "admin", "dashboard", "datatables", "crud", "tortoise-orm", "ASGI-admin"]
+description = "Simplest fastest minimal ASGI CRUD Admin panel for Tortoise ORM models. It's generating fully native async auto  zero config one line app"
+readme = "README.md"
+license = {text = "MIT"}
 dependencies = [
-    "tortoise-api >= 0.0.9",
+    "tortoise-api >= 0.1.1",
     "jinja2"
 ]
-version = "0.0.8"
+version = "0.1.0"
 
 [project.urls]
 Homepage = "https://github.com/mixartemev/femto-admin"
