@@ -1,2 +1,0 @@
-tortoise-api
-jinja2

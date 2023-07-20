@@ -5,10 +5,10 @@ authors = [
     {name = "Artemiev", email = "mixartemev@gmail.com"},
 ]
 dependencies = [
-    "tortoise-api",
+    "tortoise-api >= 0.0.9",
     "jinja2"
 ]
-version = "0.0.7"
+version = "0.0.8"
 
 [project.urls]
 Homepage = "https://github.com/mixartemev/femto-admin"
