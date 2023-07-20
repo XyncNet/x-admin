@@ -8,7 +8,7 @@ dependencies = [
     "tortoise-api",
     "jinja2"
 ]
-version = "0.0.6"
+version = "0.0.7"
 
 [project.urls]
 Homepage = "https://github.com/mixartemev/femto-admin"

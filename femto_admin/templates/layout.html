@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <title>{{ title }}</title>
     <!-- CSS files -->
-    <link href="{{ url_for('public', path='vendor/tabler/css/tabler.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('public', path='vendor/tabler/css/tabler.'+minify+'css') }}" rel="stylesheet"/>
     {% block styles %}
     {% endblock %}
 </head>
@@ -384,9 +384,9 @@
         </div>
     </div>
 {% endif %}
-<script src="{{ url_for('public', path='vendor/tabler/js/dark-theme.min.js') }}"></script>
-<script src="{{ url_for('public', path='vendor/DataTables/jQuery/jquery.min.js') }}"></script>
-<script src="{{ url_for('public', path='vendor/tabler/js/tabler.js') }}" defer></script>
+<script src="{{ url_for('public', path='vendor/tabler/js/dark-theme.'+minify+'js') }}"></script>
+<script src="{{ url_for('public', path='vendor/jQuery/jquery.'+minify+'js') }}"></script>
+<script src="{{ url_for('public', path='vendor/tabler/js/tabler.'+minify+'js') }}" defer></script>
 {#<script>#}
 {#    document.addEventListener("DOMContentLoaded", function () {#}
 {#        {% block script_onload %}#}

@@ -1,5 +1,3 @@
-import json
-
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, JSONResponse
@@ -38,6 +36,7 @@ class Admin(Api):
             ]
         )
         templates.env.globals["title"] = self.title
+        templates.env.globals["minify"] = '' if debug else 'min.'
         self.templates = templates
 
     def start(self, models_module):
@@ -48,6 +47,8 @@ class Admin(Api):
     # INTERFACE
     async def dash(self, request: Request):
         return self.templates.TemplateResponse("dashboard.html", {
+            'title': 'Home',
+            'subtitle': 'Dashboard',
             'request': request,
         })
 
