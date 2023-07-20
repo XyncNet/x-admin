@@ -5,10 +5,10 @@ authors = [
     {name = "Artemiev", email = "mixartemev@gmail.com"},
 ]
 dependencies = [
-    "git+https://github.com/mixartemev/tortoise-api",
+    "tortoise-api",
     "jinja2"
 ]
-dynamic = ["version"]
+version = "0.0.6"
 
 [project.urls]
 Homepage = "https://github.com/mixartemev/femto-admin"
@@ -16,6 +16,3 @@ Repository = "https://github.com/mixartemev/femto-admin"
 
 [tool.setuptools]
 packages = ["femto_admin"]
-
-[tool.setuptools.dynamic]
-version = {attr = "femto_admin.__version__"}
