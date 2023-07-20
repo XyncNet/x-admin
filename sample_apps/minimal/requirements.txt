@@ -1,0 +1,1 @@
+git+ssh://git@gitlab.com/mixartemev/femto-admin.git

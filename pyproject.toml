@@ -1,0 +1,21 @@
+[project]
+name = "femto-admin"
+requires-python = ">=3.9"
+authors = [
+    {name = "Artemiev", email = "mixartemev@gmail.com"},
+]
+dependencies = [
+    "git+https://github.com/mixartemev/tortoise-api",
+    "jinja2"
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/mixartemev/femto-admin"
+Repository = "https://github.com/mixartemev/femto-admin"
+
+[tool.setuptools]
+packages = ["femto_admin"]
+
+[tool.setuptools.dynamic]
+version = {attr = "femto_admin.__version__"}
