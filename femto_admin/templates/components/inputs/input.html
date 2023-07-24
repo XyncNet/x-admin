@@ -1,0 +1,3 @@
+<input {% if field.required %}required{% endif %} type="{{ field.type }}" class="form-control" name="{{ key }}"
+       placeholder="{{ placeholder }}" {% if disabled %}disabled{% endif %} value="{{ value }}">
+{% include "components/inputs/_help.html" %}

@@ -9,7 +9,9 @@
         <thead>
         <tr>
             {% for field in fields %}
-                <th>{{ field }}</th>
+                {% if not field.endswith('_id') %}
+                    <th>{{ field }}</th>
+                {% endif %}
             {% endfor %}
         </tr>
         </thead>

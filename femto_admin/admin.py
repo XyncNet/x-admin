@@ -7,9 +7,11 @@ from starlette.templating import Jinja2Templates
 from tortoise_api.api import Api, Model
 from tortoise_api.util import jsonify
 
+from femto_admin.utils import _fields
+
 
 class Admin(Api):
-    def __init__(self, debug: bool = False, title: str = "Admin"):
+    def __init__(self, debug: bool = False, title: str = "Admin", static_dir: str = None, logo: str|bool = None):
         """
         Parameters:
             title: Admin title.
@@ -29,6 +31,10 @@ class Admin(Api):
         self.routes[1].routes.pop(1)  # remove apt/favicon.ico route
         # globals
         templates = Jinja2Templates("templates")
+        if static_dir:
+            self.routes.append(Mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'))
+            if logo is not None:
+                templates.env.globals["logo"] = logo
         templates.env.loader = ChoiceLoader(
             [
                 FileSystemLoader("templates"),
@@ -47,18 +53,18 @@ class Admin(Api):
     # INTERFACE
     async def dash(self, request: Request):
         return self.templates.TemplateResponse("dashboard.html", {
-            'title': 'Home',
+            'model': 'Home',
             'subtitle': 'Dashboard',
             'request': request,
         })
 
     async def index(self, request: Request):
-        model: Model = self._get_model(request)
+        model: type[Model] = self._get_model(request)
         return self.templates.TemplateResponse("table.html", {
-            'title': model.__name__,
+            'model': model.__name__,
             'subtitle': model._meta.table_description,
             'request': request,
-            'fields': {k: v for k, v in model._meta.fields_map.items() if not k.endswith('_id')}
+            'fields': _fields(model),
         })
 
     async def dt(self, request: Request):
@@ -74,7 +80,7 @@ class Admin(Api):
 
             return [check(val) for key, val in dct.items()]
 
-        model: Model = self._get_model(request)
+        model: type[Model] = self._get_model(request)
         objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields)
         data = [render(jsonify(obj)) for obj in objects]
         return JSONResponse({'data': data})
