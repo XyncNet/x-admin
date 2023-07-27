@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, JSONResponse
@@ -7,6 +9,7 @@ from starlette.templating import Jinja2Templates
 from tortoise_api.api import Api, Model
 from tortoise_api.util import jsonify
 
+import femto_admin
 from femto_admin.utils import _fields
 
 
@@ -24,9 +27,9 @@ class Admin(Api):
             Mount('/static', StaticFiles(packages=["femto_admin"]), name='public'),
             Mount('/api', routes=self.routes), # mount api routes to /api/*
             Route("/favicon.ico", lambda r: RedirectResponse('./static/placeholders/favicon.ico', status_code=301), methods=['GET']),
-            Route('/{model}', self.index, methods=['GET']),
-            Route('/dt/{model}', self.dt, methods=['GET']),
-            Route('/', self.dash, methods=['GET']),
+            Route('/{model}', self.index),
+            Route('/dt/{model}', self.dt),
+            Route('/', self.dash),
         ]
         self.routes[1].routes.pop(1)  # remove apt/favicon.ico route
         # globals
@@ -42,6 +45,7 @@ class Admin(Api):
             ]
         )
         templates.env.globals["title"] = self.title
+        templates.env.globals["meta"] = {'year': datetime.now().year, 'ver': femto_admin.__version__}
         templates.env.globals["minify"] = '' if debug else 'min.'
         self.templates = templates
 

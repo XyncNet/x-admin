@@ -12,3 +12,4 @@ class FieldType(IntEnum):
     dt = 10
     one = 11
     many = 12
+    point = 13

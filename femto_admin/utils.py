@@ -4,8 +4,9 @@ from tortoise.fields.relational import BackwardFKRelation, ForeignKeyFieldInstan
     OneToOneFieldInstance, BackwardOneToOneRelation
 from tortoise.fields import Field, CharField, IntField, SmallIntField, BigIntField, DecimalField as DecField, \
     FloatField as FlotField, TextField, BooleanField as BoolField, DatetimeField, DateField as DatField, \
-    TimeField as TimField, JSONField as JsonField, OneToOneField, ForeignKeyRelation, OneToOneRelation, \
+    TimeField as TimField, JSONField as JsonField, ForeignKeyRelation, OneToOneRelation, \
     ManyToManyRelation, ForeignKeyNullableRelation, OneToOneNullableRelation
+from tortoise_api_model import PointField
 
 from femto_admin.consts import FieldType
 
@@ -37,6 +38,7 @@ def _fields(obj: type[Model]) -> dict:
         ForeignKeyNullableRelation: FieldType.many,
         BackwardFKRelation: FieldType.many,
         OneToOneNullableRelation: FieldType.one,
+        PointField: FieldType.point,
     }
     templates: {FieldType: str} = {
         FieldType.str: 'input',
@@ -46,6 +48,7 @@ def _fields(obj: type[Model]) -> dict:
         FieldType.bool: 'switch',
         FieldType.one: 'select',
         FieldType.many: 'select',
+        FieldType.point: 'point',
     }
     for key, field in obj._meta.fields_map.items():
         kwa = {'type': types[type(field)], 'required': not field.null}
