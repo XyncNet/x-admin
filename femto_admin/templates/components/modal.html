@@ -12,9 +12,11 @@
     {#                    {% endblock %}#}
                         {% for key, field in fields.items() %}
                             {% if not field.auto %}
-                                <div class="col-lg-12">
+                                <div class="col-lg-12 mb-3">
                                     <label class="form-label">{{ key }}</label>
-                                    {% include "components/inputs/"+field.template+".html" %}
+                                    {% with value=obj[field.name] if obj else None %}
+                                        {% include "components/inputs/"+field.template+".html" %}
+                                    {% endwith %}
                                 </div>
                             {% endif %}
                         {% endfor %}

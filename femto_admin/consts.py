@@ -13,3 +13,4 @@ class FieldType(IntEnum):
     one = 11
     many = 12
     point = 13
+    polygon = 14

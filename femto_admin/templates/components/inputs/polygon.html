@@ -1,0 +1,42 @@
+<div id="{{ key }}" class="field-list {% if error %}is-invalid{% endif %}">
+    <input id="{{ key }}-next-index" value="{{ (data or []) | length }}" hidden>
+    <div class="template d-none">
+        {% filter forceescape %}
+            <div class="mb-3 field-list-item">
+                <div class="d-flex">
+                    <div class="flex-grow-1">
+{#                        {% with data=None, error=False, field=field._field_at(None) %}#}
+                            {% include "components/inputs/point.html" %}
+{#                        {% endwith %}#}
+                    </div>
+                    <button type="button" class="field-list-btn-remove btn btn-ghost-danger btn-icon mx-2 py-0">
+                        <b class="fa fa-close">x</b>
+                    </button>
+                </div>
+            </div>
+        {% endfilter %}
+    </div>
+    <fieldset class="list-container form-fieldset d-flex flex-column">
+        {% if (data or []) | length > 0 %}
+            {% for value in data %}
+                <div class="mb-3 field-list-item">
+                    <div class="d-flex">
+                        <div class="flex-grow-1">
+{#                            {% with data=value, field=field._field_at(loop.index), error=error.get(loop.index0, None) if (error | is_dict) else None %}#}
+                            {% include "components/inputs/point.html" %}
+{#                            {% endwith %}#}
+                        </div>
+                        <button type="button" class="field-list-btn-remove btn btn-ghost-danger btn-icon mx-2 py-0">
+                            <i class="fa fa-close">x</i>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </fieldset>
+    <a type="button" class="field-list-btn-add mt-2"><i class="fa fa-add me-2"></i>Add item</a>
+</div>
+
+{% block scripts %}
+    <script src="{{ url_for('public', path='js/polygon.js') }}" defer></script>
+{% endblock %}

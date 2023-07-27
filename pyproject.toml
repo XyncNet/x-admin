@@ -9,7 +9,7 @@ description = "Simplest fastest minimal ASGI CRUD Admin panel for Tortoise ORM m
 readme = "README.md"
 license = {text = "MIT"}
 dependencies = [
-    "tortoise-api >= 0.2.1",
+    "tortoise-api >= 0.2.2",
     "jinja2"
 ]
 dynamic = ["version"]
