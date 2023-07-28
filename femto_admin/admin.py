@@ -57,14 +57,14 @@ class Admin(Api):
     # INTERFACE
     async def dash(self, request: Request):
         return self.templates.TemplateResponse("dashboard.html", {
-            'model': 'Home',
+            # 'model': 'Home',
             'subtitle': 'Dashboard',
             'request': request,
         })
 
     async def index(self, request: Request):
         model: type[Model] = self._get_model(request)
-        return self.templates.TemplateResponse("table.html", {
+        return self.templates.TemplateResponse("index.html", {
             'model': model.__name__,
             'subtitle': model._meta.table_description,
             'request': request,

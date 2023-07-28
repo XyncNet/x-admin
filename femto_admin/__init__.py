@@ -1,3 +1,3 @@
 from femto_admin.admin import Admin
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"

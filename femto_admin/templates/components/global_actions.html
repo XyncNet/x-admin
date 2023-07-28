@@ -1,5 +1,6 @@
 <div class="col-auto ms-auto d-print-none">
     <div class="btn-list">
+        {% if model %}
         <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal"
            data-bs-target="#modal-{{ model }}">
             <!-- Download SVG icon from https://tabler-icons.io/i/plus -->
@@ -23,5 +24,6 @@
                 <path d="M5 12l14 0"/>
             </svg>
         </a>
+        {% endif %}
     </div>
 </div>
