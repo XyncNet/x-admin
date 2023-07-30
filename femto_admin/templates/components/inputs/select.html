@@ -1,9 +1,7 @@
 <select class="form-select" name="{{ key }}" id="{{ 'form-select-'+key }}">
-{#    {% for option in options %}#}
-{#        <option value="{{ option[1] }}" {% if option[0] == value %}#}
-{#                selected#}
-{#        {% endif %} >{{ option[0] }}</option>#}
-{#    {% endfor %}#}
+    {% for val, name in field.options %}
+        <option value="{{ val }}" {% if val == value %}selected{% endif %}>{{ name }}</option>
+    {% endfor %}
 </select>
 {% if help_text %}
     <div class="mt-2">

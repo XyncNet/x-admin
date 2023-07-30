@@ -5,9 +5,9 @@
             <div class="mb-3 field-list-item">
                 <div class="d-flex">
                     <div class="flex-grow-1">
-{#                        {% with data=None, error=False, field=field._field_at(None) %}#}
-                            {% include "components/inputs/point.html" %}
-{#                        {% endwith %}#}
+                        {% with field=field.base_field %}
+                            {% include "components/inputs/collection.html" %}
+                        {% endwith %}
                     </div>
                     <button type="button" class="field-list-btn-remove btn btn-ghost-danger btn-icon mx-2 py-0">
                         <b class="fa fa-close">x</b>
@@ -23,7 +23,7 @@
                     <div class="d-flex">
                         <div class="flex-grow-1">
 {#                            {% with data=value, field=field._field_at(loop.index), error=error.get(loop.index0, None) if (error | is_dict) else None %}#}
-                            {% include "components/inputs/point.html" %}
+                            {% include "components/inputs/collection.html" %}
 {#                            {% endwith %}#}
                         </div>
                         <button type="button" class="field-list-btn-remove btn btn-ghost-danger btn-icon mx-2 py-0">

@@ -1,0 +1,11 @@
+{#{% if field.input!='list' %}<fieldset class="form-fieldset">{% endif %}#}
+    <div class="form-group row">
+        {% for label in field.labels %}
+            <label class="col-2 col-form-label">{{ label }}</label>
+            {% with value=value and value[loop.index], step=field.step or field.base_field.step, field=field.base_field, width='4' %}
+                {% include "components/inputs/"+field.input+".html" %}
+            {% endwith %}
+        {% endfor %}
+    </div>
+{#{% if field.input!='list' %}</fieldset>{% endif %}#}
+{% include "components/inputs/_help.html" %}

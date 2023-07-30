@@ -1,67 +1,66 @@
-from tortoise import Model
-from tortoise.fields.data import IntEnumFieldInstance, CharEnumField
+from tortoise.fields import Field, CharField, IntField, SmallIntField, BigIntField, DecimalField, FloatField,\
+    TextField, BooleanField, DatetimeField, DateField, TimeField, JSONField, ForeignKeyRelation, OneToOneRelation, \
+    ManyToManyRelation, ForeignKeyNullableRelation, OneToOneNullableRelation
+from tortoise.fields.data import IntEnumFieldInstance, CharEnumFieldInstance
 from tortoise.fields.relational import BackwardFKRelation, ForeignKeyFieldInstance, ManyToManyFieldInstance, \
     OneToOneFieldInstance, BackwardOneToOneRelation
-from tortoise.fields import Field, CharField, IntField, SmallIntField, BigIntField, DecimalField as DecField, \
-    FloatField as FlotField, TextField, BooleanField as BoolField, DatetimeField, DateField as DatField, \
-    TimeField as TimField, JSONField as JsonField, ForeignKeyRelation, OneToOneRelation, \
-    ManyToManyRelation, ForeignKeyNullableRelation, OneToOneNullableRelation
-from tortoise_api_model import PointField, PolygonField
+from tortoise_api_model import PointField, PolygonField, RangeField, Model
+from tortoise_api_model import CollectionField, ListField
 
 from femto_admin.consts import FieldType
 
 
 def _fields(obj: type[Model]) -> dict:
-    fields = {}
-    types: {Field: FieldType} = {
-        CharField: FieldType.str,
-        IntField: FieldType.int,
-        SmallIntField: FieldType.int,
-        BigIntField: FieldType.int,
-        DecField: FieldType.float,
-        FlotField: FieldType.float,
-        TextField: FieldType.txt,
-        BoolField: FieldType.bool,
-        DatetimeField: FieldType.int,
-        DatField: FieldType.int,
-        TimField: FieldType.int,
-        JsonField: FieldType.int,
-        IntEnumFieldInstance: FieldType.int,
-        CharEnumField: FieldType.int,
-        ForeignKeyFieldInstance: FieldType.one,
-        OneToOneFieldInstance: FieldType.one,
-        ManyToManyFieldInstance: FieldType.many,
-        ForeignKeyRelation: FieldType.many,
-        OneToOneRelation: FieldType.one,
-        BackwardOneToOneRelation: FieldType.one,
-        ManyToManyRelation: FieldType.many,
-        ForeignKeyNullableRelation: FieldType.many,
-        BackwardFKRelation: FieldType.many,
-        OneToOneNullableRelation: FieldType.one,
-        PointField: FieldType.point,
-        PolygonField: FieldType.polygon,
-    }
-    templates: {FieldType: str} = {
-        FieldType.str: 'input',
-        FieldType.int: 'input',
-        FieldType.float: 'input',
-        FieldType.txt: 'textarea',
-        FieldType.bool: 'switch',
-        FieldType.one: 'select',
-        FieldType.many: 'select',
-        FieldType.point: 'point',
-        FieldType.polygon: 'polygon',
-    }
-    for key, field in obj._meta.fields_map.items():
-        kwa = {'type': types[type(field)], 'required': not field.null}
-        if isinstance(field, IntEnumFieldInstance):
-            kwa.update({'enum': field.enum_type})
-        elif isinstance(field, BackwardFKRelation):
-            kwa.update({'back': True, 'required': False})
+    def type2input(ft: type[Field]):
+        dry = {
+            'base_field': hasattr(ft, 'base_field') and {**type2input(ft.base_field)},
+            'step': hasattr(ft, 'step') and ft.step,
+            'labels': hasattr(ft, 'labels') and ft.labels
+        }
+        type2inputs: {Field: dict} = {
+            CharField: {'input': FieldType.input.name},
+            IntField: {'input': FieldType.input.name, 'type': 'number'},
+            SmallIntField: {'input': FieldType.input.name, 'type': 'number'},
+            BigIntField: {'input': FieldType.input.name, 'type': 'number'},
+            DecimalField: {'input': FieldType.input.name, 'type': 'number', 'step': '0.01'},
+            FloatField: {'input': FieldType.input.name, 'type': 'number', 'step': '0.001'},
+            TextField: {'input': FieldType.textarea.name, 'rows': '2'},
+            BooleanField: {'input': FieldType.checkbox.name},
+            DatetimeField: {'input': FieldType.input.name, 'type': 'datetime'},
+            DateField: {'input': FieldType.input.name, 'type': 'date'},
+            TimeField: {'input': FieldType.input.name, 'type': 'time'},
+            JSONField: {'input': FieldType.input.name},
+            IntEnumFieldInstance: {'input': FieldType.select.name},
+            CharEnumFieldInstance: {'input': FieldType.select.name},
+            ForeignKeyFieldInstance: {'input': FieldType.select.name},
+            OneToOneFieldInstance: {'input': FieldType.select.name},
+            ManyToManyFieldInstance: {'input': FieldType.select.name, 'multiple': True},
+            ForeignKeyRelation: {'input': FieldType.select.name, 'multiple': True},
+            OneToOneRelation: {'input': FieldType.select.name},
+            BackwardOneToOneRelation: {'input': FieldType.select.name},
+            ManyToManyRelation: {'input': FieldType.select.name, 'multiple': True},
+            ForeignKeyNullableRelation: {'input': FieldType.select.name, 'multiple': True},
+            BackwardFKRelation: {'input': FieldType.select.name, 'multiple': False},
+            OneToOneNullableRelation: {'input': FieldType.select.name},
+            PointField: {'input': FieldType.collection.name, **dry},
+            PolygonField: {'input': FieldType.list.name, **dry},
+            RangeField: {'input': FieldType.collection.name, **dry},
+        }
+        return type2inputs[ft]
+
+    def field2input(field: Field):
+        attrs: dict = {'required': not field.null}
+        if isinstance(field, CharEnumFieldInstance):
+            attrs.update({'options': ((en.name, en.value) for en in field.enum_type)})
+        elif isinstance(field, IntEnumFieldInstance):
+            attrs.update({'options': ((en.value, en.name) for en in field.enum_type)})
+        # elif isinstance(field, BackwardFKRelation):
+        #     attrs.update({'back': True, 'required': False})
         if field.generated or ('auto_now' in field.__dict__ and (field.auto_now or field.auto_now_add)):
-            kwa.update({'auto': True})
-        fields[key] = {**kwa, 'template': templates[kwa['type']]}
-    return fields
+            attrs.update({'auto': True})
+        return {**type2input(type(field)), **attrs}
+
+    return {key: field2input(field) for key, field in obj._meta.fields_map.items()}
 
     # def get_fields(model: type[Model], is_display: bool = True):
     #     ret = []
