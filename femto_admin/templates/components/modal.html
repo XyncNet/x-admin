@@ -13,7 +13,7 @@
                         {% for key, field in fields.items() %}
                             {% if not field.auto %}
                                 <div class="col-lg-12 mb-3">
-                                    <label class="form-label">{{ key }}</label>
+                                    <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
                                     {% with value=obj[field.name] if obj else None, key=field.source_field or key %}
                                         {% include "components/inputs/"+field.input+".html" %}
                                     {% endwith %}

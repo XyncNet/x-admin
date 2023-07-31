@@ -56,12 +56,10 @@ async def _fields(obj: type[Model]) -> dict:
         if isinstance(field, CharEnumFieldInstance):
             attrs.update({'options': ((en.name, en.value) for en in field.enum_type)})
         elif isinstance(field, IntEnumFieldInstance):
-            attrs.update({'options': ((en.value, en.name) for en in field.enum_type)})
+            attrs.update({'options': ((en.value, en.name.replace('_', ' ').title()) for en in field.enum_type)})
         elif isinstance(field, RelationalField):
             attrs.update({'options': await get_options(field), 'source_field': field.source_field})
-        # elif isinstance(field, BackwardFKRelation):
-        #     attrs.update({'back': True, 'required': False})
-        if field.generated or ('auto_now' in field.__dict__ and (field.auto_now or field.auto_now_add)):
+        elif field.generated or ('auto_now' in field.__dict__ and (field.auto_now or field.auto_now_add)):
             attrs.update({'auto': True})
         return {**type2input(type(field)), **attrs}
 
