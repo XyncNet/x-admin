@@ -1,6 +1,8 @@
-<select class="form-select" name="{{ key }}" id="{{ 'form-select-'+key }}">
+<select class="form-select" name="{{ key }}{{ field.multiple and '[]' }}" id="{{ 'form-select-'+key }}" {{ field.multiple and 'multiple' }}>
     {% for val, name in field.options %}
-        <option value="{{ val }}" {% if val == value %}selected{% endif %}>{{ name }}</option>
+        <option value="{{ val }}" {% if val == value %}selected{% endif %}>
+            {{ name }}
+        </option>
     {% endfor %}
 </select>
 {% if help_text %}

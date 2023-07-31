@@ -2,11 +2,11 @@
     <div class="form-group row">
         <label class="col-2 col-form-label" for="lat">From</label>
         <div class="col-4">
-            <input type="number" class="form-control col-4" name="{{ key }}" placeholder="Man value" {% if disabled %}disabled{% endif %} value="{{ value and value[0] }}">
+            <input type="number" class="form-control col-4" name="{{ key }}[]" placeholder="Man value" {% if disabled %}disabled{% endif %} value="{{ value and value[0] }}">
         </div>
         <label class="col-2 col-form-label" for="lat">To</label>
         <div class="col-4">
-            <input type="number" class="form-control col-4" name="{{ key }}" placeholder="Max Value" {% if disabled %}disabled{% endif %} value="{{ value and value[1] }}">
+            <input type="number" class="form-control col-4" name="{{ key }}[]" placeholder="Max Value" {% if disabled %}disabled{% endif %} value="{{ value and value[1] }}">
         </div>
     </div>
 {% if field.template=='range' %}</fieldset>{% endif %}

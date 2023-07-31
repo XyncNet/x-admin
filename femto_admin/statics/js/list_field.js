@@ -9,7 +9,8 @@ function processElement(element) {
 
             function update_attr(el, attr) {
                 $(`[${attr}]`, el).each(function () {
-                    $(this).attr(attr, baseName + "." + idx);
+                    const sfx = this.name.endsWith('[]') ? '[]' : ''
+                    $(this).attr(attr, baseName + "." + idx + sfx);
                 });
             }
             update_attr(template, "id");
