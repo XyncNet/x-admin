@@ -9,5 +9,6 @@ class User(Model):
 class Post(Model):
     id: int = fields.IntField(pk=True)
     text: str = fields.CharField(4095)
+    published: bool = fields.BooleanField()
     user: User = fields.ForeignKeyField('models.User', related_name='posts')
     _name = 'text'

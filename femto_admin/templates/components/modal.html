@@ -5,7 +5,7 @@
                 <h5 class="modal-title">{{ title }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="/api/{{ model }}" method="POST">
+            <form action="/api/{{ model }}" method="POST" enctype="">
                 <div class="modal-body">
                     <div class="row mb-3">
     {#                    {% block modal_content %}#}
@@ -14,7 +14,7 @@
                             {% if not field.auto %}
                                 <div class="col-lg-12 mb-3">
                                     <label class="form-label">{{ key }}</label>
-                                    {% with value=obj[field.name] if obj else None %}
+                                    {% with value=obj[field.name] if obj else None, key=field.source_field or key %}
                                         {% include "components/inputs/"+field.input+".html" %}
                                     {% endwith %}
                                 </div>

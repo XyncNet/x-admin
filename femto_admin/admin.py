@@ -6,8 +6,9 @@ from starlette.responses import RedirectResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from tortoise_api.api import Api, Model
+from tortoise_api.api import Api
 from tortoise_api.util import jsonify
+from tortoise_api_model import Model
 
 import femto_admin
 from femto_admin.utils import _fields
@@ -68,7 +69,7 @@ class Admin(Api):
             'model': model.__name__,
             'subtitle': model._meta.table_description,
             'request': request,
-            'fields': _fields(model),
+            'fields': await _fields(model),
         })
 
     async def dt(self, request: Request):

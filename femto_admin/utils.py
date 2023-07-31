@@ -3,14 +3,17 @@ from tortoise.fields import Field, CharField, IntField, SmallIntField, BigIntFie
     ManyToManyRelation, ForeignKeyNullableRelation, OneToOneNullableRelation
 from tortoise.fields.data import IntEnumFieldInstance, CharEnumFieldInstance
 from tortoise.fields.relational import BackwardFKRelation, ForeignKeyFieldInstance, ManyToManyFieldInstance, \
-    OneToOneFieldInstance, BackwardOneToOneRelation
+    OneToOneFieldInstance, BackwardOneToOneRelation, RelationalField
 from tortoise_api_model import PointField, PolygonField, RangeField, Model
-from tortoise_api_model import CollectionField, ListField
 
 from femto_admin.consts import FieldType
 
+async def get_options(field: RelationalField):
+    first = [('', 'Empty')] if field.null or isinstance(field, BackwardFKRelation) else []
+    res = first + [(x.pk, x.repr()) for x in await field.related_model.all()]
+    return res
 
-def _fields(obj: type[Model]) -> dict:
+async def _fields(obj: type[Model]) -> dict:
     def type2input(ft: type[Field]):
         dry = {
             'base_field': hasattr(ft, 'base_field') and {**type2input(ft.base_field)},
@@ -48,19 +51,21 @@ def _fields(obj: type[Model]) -> dict:
         }
         return type2inputs[ft]
 
-    def field2input(field: Field):
+    async def field2input(field: Field):
         attrs: dict = {'required': not field.null}
         if isinstance(field, CharEnumFieldInstance):
             attrs.update({'options': ((en.name, en.value) for en in field.enum_type)})
         elif isinstance(field, IntEnumFieldInstance):
             attrs.update({'options': ((en.value, en.name) for en in field.enum_type)})
+        elif isinstance(field, RelationalField):
+            attrs.update({'options': await get_options(field), 'source_field': field.source_field})
         # elif isinstance(field, BackwardFKRelation):
         #     attrs.update({'back': True, 'required': False})
         if field.generated or ('auto_now' in field.__dict__ and (field.auto_now or field.auto_now_add)):
             attrs.update({'auto': True})
         return {**type2input(type(field)), **attrs}
 
-    return {key: field2input(field) for key, field in obj._meta.fields_map.items()}
+    return {key: await field2input(field) for key, field in obj._meta.fields_map.items() if not key.endswith('_id')}
 
     # def get_fields(model: type[Model], is_display: bool = True):
     #     ret = []
