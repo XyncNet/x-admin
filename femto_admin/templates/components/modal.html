@@ -1,44 +1,19 @@
-<div class="modal modal-blur fade" id="modal-{{ model }}" tabindex="-1" role="dialog" aria-hidden="true">
+{% from "views/form.html" import form with context %}
+<div class="modal modal-blur fade" id="modal-{{ model.__name__ }}" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{ title }}</h5>
+                <h5 class="modal-title">{{ (obj and model.__name__+': '+obj.repr()) or (model and model.__name__) or title }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="/api/{{ model }}" method="POST" enctype="">
-                <div class="modal-body">
-                    <div class="row mb-3">
-    {#                    {% block modal_content %}#}
-    {#                    {% endblock %}#}
-                        {% for key, field in fields.items() %}
-                            {% if not field.auto %}
-                                <div class="col-lg-12 mb-3">
-                                    <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
-                                    {% with value=obj[field.name] if obj else None, key=field.source_field or key %}
-                                        {% include "components/inputs/"+field.input+".html" %}
-                                    {% endwith %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
-                        Cancel
-                    </a>
-                    <button class="btn btn-primary ms-auto" data-bs-dismiss="modal" type="submit">
-                        <!-- Download SVG icon from https://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-                             stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                             stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M12 5l0 14"/>
-                            <path d="M5 12l14 0"/>
-                        </svg>
-                        {{ action }} {{ model }}
-                    </button>
-                </div>
-            </form>
+            <div class="modal-body">
+                {{ form() }}
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+            </div>
         </div>
     </div>
 </div>

@@ -7,6 +7,8 @@
     <title>{{ title }}</title>
     <!-- CSS files -->
     <link href="{{ url_for('public', path='vendor/tabler/css/tabler.'+minify+'css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('public', path='vendor/tabler/css/tabler-icons.'+minify+'css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('public', path='css/main.css') }}" rel="stylesheet"/>
     {% block styles %}
     {% endblock %}
 </head>
@@ -28,7 +30,7 @@
                             {{ subtitle or '' }}
                         </div>
                         <h2 class="page-title">
-                            {{ model or title or '' }}
+                            {{ (obj and model.__name__+': '+obj.repr()) or (model and model.__name__) or title or '' }}
                         </h2>
                     </div>
                     <!-- Page title actions -->
@@ -46,7 +48,7 @@
         {% include "components/footer.html" %}
     </div>
 </div>
-{% if request.scope['endpoint'].__name__ in ['index'] %}
+{% if model %}
     {% include "components/modal.html" %}
 {% endif %}
 <script src="{{ url_for('public', path='vendor/tabler/js/dark-theme.'+minify+'js') }}"></script>

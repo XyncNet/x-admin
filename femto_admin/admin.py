@@ -11,11 +11,10 @@ from tortoise_api.util import jsonify
 from tortoise_api_model import Model
 
 import femto_admin
-from femto_admin.utils import _fields
 
 
 class Admin(Api):
-    def __init__(self, debug: bool = False, title: str = "Admin", static_dir: str = None, logo: str|bool = None):
+    def __init__(self, debug: bool = False, title: str = "Admin", static_dir: str = None, logo: str|bool = None, dash_func: callable = None):
         """
         Parameters:
             title: Admin title.
@@ -25,12 +24,13 @@ class Admin(Api):
         self.title = title
         # self._views: List[BaseView] = []
         self.routes: [Route | Mount] = [
-            Mount('/static', StaticFiles(packages=["femto_admin"]), name='public'),
+            Route('/', dash_func or self.dash),
             Mount('/api', routes=self.routes), # mount api routes to /api/*
+            Mount('/static', StaticFiles(packages=["femto_admin"]), name='public'),
             Route("/favicon.ico", lambda r: RedirectResponse('./static/placeholders/favicon.ico', status_code=301), methods=['GET']),
             Route('/{model}', self.index),
             Route('/dt/{model}', self.dt),
-            Route('/', self.dash),
+            Route('/{model}/{oid}', self.edit),
         ]
         self.routes[1].routes.pop(1)  # remove apt/favicon.ico route
         # globals
@@ -65,11 +65,23 @@ class Admin(Api):
 
     async def index(self, request: Request):
         model: type[Model] = self._get_model(request)
+        await model.load_rel_options()
         return self.templates.TemplateResponse("index.html", {
-            'model': model.__name__,
+            'model': model,
             'subtitle': model._meta.table_description,
             'request': request,
-            'fields': await _fields(model),
+        })
+
+    async def edit(self, request: Request):
+        model: type[Model] = self._get_model(request)
+        oid = request.path_params['oid']
+        await model.load_rel_options()
+        obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
+        return self.templates.TemplateResponse("edit.html", {
+            'model': model,
+            'subtitle': model._meta.table_description,
+            'request': request,
+            'obj': obj,
         })
 
     async def dt(self, request: Request):

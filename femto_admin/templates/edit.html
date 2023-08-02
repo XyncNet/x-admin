@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+
+{% from "views/table.html" import table with context %}
+{% from "views/form.html" import form with context %}
+
+{% block body %}
+{{ form() }}
+{{ table() }}
+{% endblock %}

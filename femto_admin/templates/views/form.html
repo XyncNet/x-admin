@@ -1,0 +1,21 @@
+{% macro form() -%}
+<div class="row mb-3">
+    <form action="/api/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}" method="POST">
+        {#                    {% block modal_content %}#}
+        {#                    {% endblock %}#}
+        {% for key, field in model.field_input_map().items() %}
+            {% if not field.auto %}
+                <div class="col-lg-12 mb-3">
+                    <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
+                    {% with key=field.source_field or key, value=obj and obj[key] %}
+                        {% include "components/inputs/"+field.input+".html" %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <button class="btn btn-primary ms-auto" data-bs-dismiss="modal" type="submit">
+            {{ 'Edit' if obj else 'New' }} {{ model.__name__ }}
+        </button>
+    </form>
+</div>
+{%- endmacro %}
