@@ -77,11 +77,14 @@ class Admin(Api):
         oid = request.path_params['oid']
         await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
+        bfms = [getattr(obj, k).remote_model for k in model._meta.backward_fk_fields]
+        [await bfm.load_rel_options() for bfm in bfms]
         return self.templates.TemplateResponse("edit.html", {
             'model': model,
             'subtitle': model._meta.table_description,
             'request': request,
             'obj': obj,
+            'bfms': bfms,
         })
 
     async def dt(self, request: Request):

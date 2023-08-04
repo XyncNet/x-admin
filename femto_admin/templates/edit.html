@@ -4,6 +4,8 @@
 {% from "views/form.html" import form with context %}
 
 {% block body %}
-{{ form() }}
-{{ table() }}
+    {{ form() }}
+    {% for bfm in bfms %}
+        {{ table(model=bfm) }}
+    {% endfor %}
 {% endblock %}
