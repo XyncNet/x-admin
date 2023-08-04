@@ -1,4 +1,5 @@
 from datetime import datetime
+from os.path import exists
 
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from starlette.requests import Request
@@ -26,8 +27,8 @@ class Admin(Api):
         self.routes: [Route | Mount] = [
             Route('/', dash_func or self.dash),
             Mount('/api', routes=self.routes), # mount api routes to /api/*
-            Mount('/static', StaticFiles(packages=["femto_admin"]), name='public'),
-            Route("/favicon.ico", lambda r: RedirectResponse('./static/placeholders/favicon.ico', status_code=301), methods=['GET']),
+            Mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
+            Route('/favicon.ico', lambda r: RedirectResponse('./statics/placeholders/favicon.ico', status_code=301), methods=['GET']),
             Route('/{model}', self.index),
             Route('/dt/{model}', self.dt),
             Route('/{model}/{oid}', self.edit),
@@ -36,9 +37,12 @@ class Admin(Api):
         # globals
         templates = Jinja2Templates("templates")
         if static_dir:
-            self.routes.append(Mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'))
+            self.routes.insert(2, Mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'))
             if logo is not None:
                 templates.env.globals["logo"] = logo
+            if exists(f'./{static_dir}/favicon.ico'):
+                self.routes.pop(4)
+                self.routes.insert(4, Route('/favicon.ico', lambda r: RedirectResponse(f'./{static_dir}/favicon.ico', status_code=301), methods=['GET']),)
         templates.env.loader = ChoiceLoader(
             [
                 FileSystemLoader("templates"),

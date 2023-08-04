@@ -9,7 +9,7 @@
                 {% if logo == False %}
                     {{ title }}
                 {% else %}
-                    <img src="{% if logo %}{{ url_for('my-public', path=logo) }}{% else %}/static/placeholders/logo/logo-white.svg{% endif %}"
+                    <img src="{% if logo %}{{ url_for('my-public', path=logo) }}{% else %}/statics/placeholders/logo/logo-white.svg{% endif %}"
                          width="110" height="32" alt="Tabler" class="navbar-brand-image"
                     >
                 {% endif %}
