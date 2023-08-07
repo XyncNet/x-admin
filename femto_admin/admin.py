@@ -29,9 +29,9 @@ class Admin(Api):
             Mount('/api', routes=self.routes), # mount api routes to /api/*
             Mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
             Route('/favicon.ico', lambda r: RedirectResponse('./statics/placeholders/favicon.ico', status_code=301), methods=['GET']),
-            Route('/{model}', self.index),
+            Route('/list/{model}', self.index),
             Route('/dt/{model}', self.dt),
-            Route('/{model}/{oid}', self.edit),
+            Route('/edit/{model}/{oid}', self.edit),
         ]
         self.routes[1].routes.pop(1)  # remove apt/favicon.ico route
         # globals
@@ -94,7 +94,7 @@ class Admin(Api):
     async def dt(self, request: Request):
         def render(dct: dict):
             def rel(val: dict):
-                return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
+                return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/edit/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
             def check(val):
                 if isinstance(val, dict) and 'repr' in val.keys():
                     return rel(val)

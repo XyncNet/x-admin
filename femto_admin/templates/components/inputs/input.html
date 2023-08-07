@@ -1,8 +1,8 @@
 <div class="{{ width and 'col-'+width }}">
     <input
-            class="form-control" type="{{ field.type }}" {{ step and 'step='+step }} name="{{ key }}"
-            value="{{ value or '' }}"
-            {{ field.required and 'required'}} {{ field.disabled and 'disabled'}} placeholder="{{ label }}"
+        class="form-control" type="{{ field.type }}" {{ step and 'step='+step }} name="{{ key }}" id="{{ key }}"
+        value="{{ value or '' }}"
+        {{ field.required and 'required'}} {{ field.disabled and 'disabled'}} placeholder="{{ label }}"
     >
 </div>
 {% include "components/inputs/_help.html" %}

@@ -48,9 +48,7 @@
         {% include "components/footer.html" %}
     </div>
 </div>
-{% if model %}
-    {% include "components/modal.html" %}
-{% endif %}
+
 <script src="{{ url_for('public', path='vendor/tabler/js/dark-theme.'+minify+'js') }}"></script>
 <script src="{{ url_for('public', path='vendor/jQuery/jquery.'+minify+'js') }}"></script>
 <script src="{{ url_for('public', path='vendor/tabler/js/tabler.'+minify+'js') }}" defer></script>
