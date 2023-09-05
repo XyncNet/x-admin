@@ -30,7 +30,7 @@
                             {{ subtitle or '' }}
                         </div>
                         <h2 class="page-title">
-                            {{ (obj and model.__name__+': '+obj.repr()) or (model and model.__name__) or title or '' }}
+                            {{ (model and model.__name__) or title or '' }}
                         </h2>
                     </div>
                     <!-- Page title actions -->
