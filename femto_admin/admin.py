@@ -92,19 +92,22 @@ class Admin(Api):
         })
 
     async def dt(self, request: Request):
-        def render(dct: dict):
+        async def render(obj: Model):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/edit/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
-            def check(val):
+            def check(val, is_id: bool):
                 if isinstance(val, dict) and 'repr' in val.keys():
                     return rel(val)
+                elif is_id:
+                    return rel({'type': obj.__class__.__name__, 'id': val, 'repr': val})
                 elif isinstance(val, list) and val and isinstance(val[0], dict) and 'repr' in val[0].keys():
                     return ' '.join(rel(v) for v in val)
                 return val
 
-            return [check(val) for key, val in dct.items()]
+            return [check(val, key=='id') for key, val in (await jsonify(obj)).items()]
 
         model: type[Model] = self._get_model(request)
         objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields)
-        data = [render(await jsonify(obj)) for obj in objects]
+
+        data = [await render(obj) for obj in objects]
         return JSONResponse({'data': data})
