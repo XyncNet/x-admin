@@ -106,5 +106,5 @@ class Admin(Api):
 
         model: type[Model] = self._get_model(request)
         objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields)
-        data = [render(jsonify(obj)) for obj in objects]
+        data = [render(await jsonify(obj)) for obj in objects]
         return JSONResponse({'data': data})

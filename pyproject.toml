@@ -1,6 +1,6 @@
 [project]
 name = "femto-admin"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [
     {name = "Artemiev", email = "mixartemev@gmail.com"},
 ]
@@ -9,7 +9,7 @@ description = "Simplest fastest minimal ASGI CRUD Admin panel for Tortoise ORM m
 readme = "README.md"
 license = {text = "MIT"}
 dependencies = [
-    "tortoise-api >= 0.2.7",
+    "tortoise-api >= 0.2.9",
     "jinja2"
 ]
 dynamic = ["version"]
