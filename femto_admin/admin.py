@@ -102,7 +102,7 @@ class Admin(Api):
                     return rel({'type': obj.__class__.__name__, 'id': val, 'repr': val})
                 elif isinstance(val, list) and val and isinstance(val[0], dict) and 'repr' in val[0].keys():
                     return ' '.join(rel(v) for v in val)
-                return f'{val[:100]}..' if len(val)>100 else val
+                return f'{val[:100]}..' if isinstance(val, str) and len(val)>100 else val
 
             return [check(val, key=='id') for key, val in (await jsonify(obj)).items()]
 
