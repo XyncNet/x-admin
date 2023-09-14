@@ -1,6 +1,8 @@
 from datetime import datetime
-from os.path import exists
-
+from os import path
+from types import ModuleType
+from fastapi import FastAPI, APIRouter
+from fastapi.routing import APIRoute
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, JSONResponse
@@ -15,49 +17,40 @@ import femto_admin
 
 
 class Admin(Api):
-    def __init__(self, debug: bool = False, title: str = "Admin", static_dir: str = None, logo: str|bool = None, dash_func: callable = None):
+    app: FastAPI
+    def __init__(self, models_module: ModuleType, debug: bool = False, title: str = "Admin", static_dir: str = None, logo: str|bool = None, dash_func: callable = None):
         """
         Parameters:
             title: Admin title.
             # auth_provider: Authentication Provider
         """
-        super().__init__(debug)
         self.title = title
         # self._views: List[BaseView] = []
-        self.routes: [Route | Mount] = [
-            Route('/', dash_func or self.dash),
-            Mount('/api', routes=self.routes), # mount api routes to /api/*
-            Mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
-            Route('/favicon.ico', lambda r: RedirectResponse('./statics/placeholders/favicon.ico', status_code=301), methods=['GET']),
-            Route('/list/{model}', self.index),
-            Route('/dt/{model}', self.dt),
-            Route('/edit/{model}/{oid}', self.edit),
-        ]
-        self.routes[1].routes.pop(1)  # remove apt/favicon.ico route
+        super().__init__(models_module, debug)
         # globals
         templates = Jinja2Templates("templates")
+        routes: [Route | Mount] = [
+            Route('/', dash_func or self.dash),
+            APIRoute('/list/{model}', self.index),
+            APIRoute('/dt/{model}', self.dt),
+            APIRoute('/edit/{model}/{oid}', self.edit),
+            Route('/favicon.ico', lambda r: RedirectResponse('./statics/placeholders/favicon.ico', status_code=301)),
+        ]
         if static_dir:
-            self.routes.insert(2, Mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'))
+            routes.append(Mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'))
             if logo is not None:
                 templates.env.globals["logo"] = logo
-            if exists(f'./{static_dir}/favicon.ico'):
-                self.routes.pop(4)
-                self.routes.insert(4, Route('/favicon.ico', lambda r: RedirectResponse(f'./{static_dir}/favicon.ico', status_code=301), methods=['GET']),)
-        templates.env.loader = ChoiceLoader(
-            [
-                FileSystemLoader("templates"),
-                PackageLoader("femto_admin", "templates"),
-            ]
-        )
+        if path.exists(favicon_path := f'./{static_dir or "statics/placeholders"}/favicon.ico'):
+            routes.append(Route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301)))
+        templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
         templates.env.globals["title"] = self.title
         templates.env.globals["meta"] = {'year': datetime.now().year, 'ver': femto_admin.__version__}
         templates.env.globals["minify"] = '' if debug else 'min.'
         self.templates = templates
-
-    def start(self, models_module):
-        app = super().start(models_module)
+        self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
+        self.app.include_router(APIRouter(routes=routes), tags=['admin'])
         self.templates.env.globals["models"] = self.models
-        return app
+
 
     # INTERFACE
     async def dash(self, request: Request):
@@ -67,8 +60,8 @@ class Admin(Api):
             'request': request,
         })
 
-    async def index(self, request: Request):
-        model: type[Model] = self._get_model(request)
+    async def index(self, request: Request, model: str):
+        model: type[Model] = self.models.get(model)
         await model.load_rel_options()
         return self.templates.TemplateResponse("index.html", {
             'model': model,
@@ -76,8 +69,8 @@ class Admin(Api):
             'request': request,
         })
 
-    async def edit(self, request: Request):
-        model: type[Model] = self._get_model(request)
+    async def edit(self, request: Request, model: str):
+        model: type[Model] = self.models.get(model)
         oid = request.path_params['oid']
         await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
@@ -91,7 +84,7 @@ class Admin(Api):
             'bfms': bfms,
         })
 
-    async def dt(self, request: Request):
+    async def dt(self, request: Request, model: str):
         async def render(obj: Model):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/edit/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
@@ -106,7 +99,7 @@ class Admin(Api):
 
             return [check(val, key=='id') for key, val in (await jsonify(obj)).items()]
 
-        model: type[Model] = self._get_model(request)
+        model: type[Model] = self.models.get(model)
         objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields)
 
         data = [await render(obj) for obj in objects]
