@@ -1,7 +1,7 @@
 from datetime import datetime
 from os import path
 from types import ModuleType
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends
 from fastapi.routing import APIRoute
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from starlette.requests import Request
@@ -10,6 +10,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from tortoise_api.api import Api
+from tortoise_api.oauth import get_current_active_user
 from tortoise_api.util import jsonify
 from tortoise_api_model import Model
 
@@ -34,21 +35,23 @@ class Admin(Api):
             APIRoute('/list/{model}', self.index),
             APIRoute('/dt/{model}', self.dt),
             APIRoute('/edit/{model}/{oid}', self.edit),
-            Route('/favicon.ico', lambda r: RedirectResponse('./statics/placeholders/favicon.ico', status_code=301)),
         ]
+
+        self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
+        self.app.include_router(APIRouter(routes=routes), tags=['admin'], dependencies=[Depends(get_current_active_user)])
+
         if static_dir:
-            routes.append(Mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'))
+            self.app.mount('/'+static_dir, StaticFiles(directory=static_dir), name='my-public'),
             if logo is not None:
                 templates.env.globals["logo"] = logo
         if path.exists(favicon_path := f'./{static_dir or "statics/placeholders"}/favicon.ico'):
-            routes.append(Route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301)))
+            self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
+
         templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
         templates.env.globals["title"] = self.title
         templates.env.globals["meta"] = {'year': datetime.now().year, 'ver': femto_admin.__version__}
         templates.env.globals["minify"] = '' if debug else 'min.'
         self.templates = templates
-        self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
-        self.app.include_router(APIRouter(routes=routes), tags=['admin'])
         self.templates.env.globals["models"] = self.models
 
 
