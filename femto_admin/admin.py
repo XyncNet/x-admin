@@ -31,10 +31,10 @@ class Admin(Api):
         # globals
         templates = Jinja2Templates("templates")
         routes: [Route | Mount] = [
-            Route('/', dash_func or self.dash),
-            APIRoute('/list/{model}', self.index),
-            APIRoute('/dt/{model}', self.dt),
-            APIRoute('/edit/{model}/{oid}', self.edit),
+            APIRoute('/', dash_func or self.dash, name="Dashboard"),
+            APIRoute('/list/{model}', self.index, name='List view'),
+            APIRoute('/api-dt/{model}', self.dt, name='Datatables format', tags=['api']),
+            APIRoute('/edit/{model}/{oid}', self.edit, name='Edit view'),
         ]
 
         self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
