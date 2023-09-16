@@ -27,7 +27,7 @@ class Admin(Api):
         """
         self.title = title
         # self._views: List[BaseView] = []
-        super().__init__(models_module, debug)
+        super().__init__(models_module, debug, title)
         # globals
         templates = Jinja2Templates("templates")
         routes: [Route | Mount] = [
