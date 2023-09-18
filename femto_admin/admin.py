@@ -2,10 +2,11 @@ from datetime import datetime
 from os import path
 from types import ModuleType
 from fastapi import FastAPI, APIRouter, Depends
+from fastapi.responses import ORJSONResponse
 from fastapi.routing import APIRoute
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, JSONResponse
+from starlette.responses import RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -123,4 +124,4 @@ class Admin(Api):
         objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields).limit(limit).offset(limit*(page-1))
 
         data = [await render(obj) for obj in objects]
-        return JSONResponse({'data': data})
+        return ORJSONResponse({'data': data})
