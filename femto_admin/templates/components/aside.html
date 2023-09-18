@@ -5,7 +5,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <h1 class="navbar-brand navbar-brand-autodark">
-            <a href="/">
+            <a href="/admin">
                 {% if logo == False %}
                     {{ title }}
                 {% else %}
@@ -19,7 +19,7 @@
             <ul class="navbar-nav">
                 {% for key, item in models.items() if not item._hidden %}
                     <li class="nav-item">
-                        <a class="nav-link dropdown-item" href="/list/{{ key }}">
+                        <a class="nav-link dropdown-item" href="/admin/{{ key }}">
                           <span class="nav-link-icon d-md-none d-lg-inline-block color">
                               <i class="ti ti-{{ item._icon }}"></i>
                           </span>
