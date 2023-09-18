@@ -103,7 +103,7 @@ class Admin(Api):
             'bfms': bfms,
         })
 
-    async def dt(self, request: Request, model: str):
+    async def dt(self, model: str, limit: int = 50, page: int = 1):
         async def render(obj: Model):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/admin/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
@@ -120,7 +120,7 @@ class Admin(Api):
             return [check(val, key == 'id') for key, val in (await jsonify(obj)).items()]
 
         model: type[Model] = self.models.get(model)
-        objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields)
+        objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields).limit(limit).offset(limit*(page-1))
 
         data = [await render(obj) for obj in objects]
         return JSONResponse({'data': data})
