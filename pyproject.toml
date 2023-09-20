@@ -1,6 +1,6 @@
 [project]
 name = "femto-admin"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
     {name = "Artemiev", email = "mixartemev@gmail.com"},
 ]
@@ -10,7 +10,8 @@ readme = "README.md"
 license = {text = "MIT"}
 dependencies = [
     "tortoise-api >= 0.3.0",
-    "jinja2"
+    "jinja2",
+    "redis"
 ]
 dynamic = ["version"]
 
