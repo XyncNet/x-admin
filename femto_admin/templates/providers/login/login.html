@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block outer_body %}
+{% extends "base.html" %}
+{% block html_body %}
     <body class="border-primary d-flex flex-column">
     <div class="page page-center">
         <div class="container-tight py-4">
@@ -41,22 +42,22 @@
                         {{ login_title }}
                     </h2>
                     <div class="mb-3">
-                        <label class="form-label">{{ _('username') }}</label>
+                        <label class="form-label">username</label>
                         <input
                                 name="username"
                                 type="text"
                                 class="form-control"
-                                placeholder="{{ _('login_username_placeholder') }}"
+                                placeholder="login_username_placeholder"
                         />
                     </div>
                     <div class="mb-2">
                         <label class="form-label">
-                            {{ _('password') }}
+                            password
                             <span class="form-label-description"> </span>
                         </label>
                         <div class="input-group input-group-flat">
                             <input
-                                    placeholder="{{ _('login_password_placeholder') }}"
+                                    placeholder="login_password_placeholder"
                                     name="password"
                                     type="password"
                                     class="form-control"
@@ -72,12 +73,12 @@
                                     name="remember_me"
                                     class="form-check-input"
                             />
-                            <span class="form-check-label">{{ _('remember_me') }}</span>
+                            <span class="form-check-label">remember_me</span>
                         </label>
                     </div>
                     <div class="form-footer">
                         <button type="submit" class="btn btn-primary w-100">
-                            {{ _('sign_in') }}
+                            sign_in
                         </button>
                     </div>
                 </div>

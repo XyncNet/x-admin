@@ -5,6 +5,7 @@ from fastapi import FastAPI, APIRouter, Depends
 from fastapi.responses import ORJSONResponse
 from fastapi.routing import APIRoute
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
+from redis.asyncio import Redis
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.routing import Mount, Route
@@ -16,6 +17,8 @@ from tortoise_api.util import jsonify
 from tortoise_api_model import Model
 
 import femto_admin
+from femto_admin.providers import Provider
+from femto_admin.providers.auth import AuthProvider
 
 
 class Admin(Api):
@@ -28,25 +31,15 @@ class Admin(Api):
         title: str = "Admin",
         static_dir: str = None,
         logo: str | bool = None,
-        dash_func: callable = None,
     ):
         """
         Parameters:
             title: Admin title.
             # auth_provider: Authentication Provider
         """
-        # globals
-        templates = Jinja2Templates("templates")
-        routes: [Route | Mount] = [
-            APIRoute('/', dash_func or self.dash, name="Dashboard"),
-            APIRoute('/{model}/{oid}', self.edit, name='Edit view'),
-            APIRoute('/{model}', self.index, name='List view'),
-        ]
-
         super().__init__(models_module, debug, title)
-        self.app.add_route('/login', self.login)
-        self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
-        self.app.include_router(APIRouter(routes=routes), prefix='/admin', tags=['admin'], include_in_schema=False)
+        templates = Jinja2Templates("templates")
+
         if static_dir:
             self.app.mount('/' + static_dir, StaticFiles(directory=static_dir), name='my-public'),
             if logo is not None:
@@ -54,25 +47,29 @@ class Admin(Api):
         if path.exists(favicon_path := f'./{static_dir or "statics/placeholders"}/favicon.ico'):
             self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
 
-        self.app.add_api_route('/dt/{model}', self.dt, name='Datatables format', tags=['api']) # , dependencies=[Depends(get_current_active_user)]
-
-        # self._views: List[BaseView] = []
-
         templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
         templates.env.globals["title"] = title
         templates.env.globals["meta"] = {'year': datetime.now().year, 'ver': femto_admin.__version__}
         templates.env.globals["minify"] = '' if debug else 'min.'
+        templates.env.globals["models"] = self.models
         self.templates = templates
-        self.templates.env.globals["models"] = self.models
+
+    def startapp(self, redis: Redis = None, dash_func: callable = None):
+        routes: [Route | Mount] = [
+            APIRoute('/', dash_func or self.dash, name="Dashboard"),
+            APIRoute('/{model}/{oid}', self.edit, name='Edit view'),
+            APIRoute('/{model}', self.index, name='List view'),
+        ]
+        self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
+        self.app.include_router(APIRouter(routes=routes), prefix='/admin', tags=['admin'], include_in_schema=False)
+        self.app.add_api_route('/dt/{model}', self.dt, name='Datatables format', tags=['api']) # , dependencies=[Depends(get_current_active_user)]
+
+        self.app.redis = redis
+        self.app.login_provider = AuthProvider(self)
+        return self.app
+
 
     # INTERFACE
-    async def login(self, request: Request):
-        return self.templates.TemplateResponse("dashboard.html", {
-            # 'model': 'Home',
-            'subtitle': 'Dashboard',
-            'request': request,
-        })
-
     async def dash(self, request: Request):
         return self.templates.TemplateResponse("dashboard.html", {
             # 'model': 'Home',
