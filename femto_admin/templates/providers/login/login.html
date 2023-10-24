@@ -33,7 +33,7 @@
             {% endif %}
             <form
                     class="card card-md"
-                    action="{{ request.app.admin_path }}{{ request.app.login_provider.login_path }}"
+                    action="/login"
                     method="post"
                     autocomplete="off"
             >
@@ -43,27 +43,41 @@
                     </h2>
                     <div class="mb-3">
                         <label class="form-label">username</label>
-                        <input
-                                name="username"
-                                type="text"
-                                class="form-control"
-                                placeholder="login_username_placeholder"
-                        />
+                        <div class="input-group input-group">
+                            <span class="input-group-text"> @ </span>
+                            <input
+                                    name="username"
+                                    required
+                                    type="text"
+                                    class="form-control {{ 'is-invalid' if reason=='login' }}"
+                                    placeholder="login_username_placeholder"
+                                    {% if username %}value="{{ username }}"{% endif %}
+                                    onchange="this.classList.remove(['is-invalid'])"
+                            />
+                        </div>
                     </div>
                     <div class="mb-2">
                         <label class="form-label">
                             password
                             <span class="form-label-description"> </span>
                         </label>
-                        <div class="input-group input-group-flat">
+                        <div class="input-group">
                             <input
                                     placeholder="login_password_placeholder"
+                                    required
                                     name="password"
                                     type="password"
-                                    class="form-control"
+                                    class="form-control {{ 'is-invalid' if reason=='password' }}"
                                     autocomplete="off"
+                                    {% if password %}value="{{ password }}"{% endif %}
+                                    onchange="this.classList.remove(['is-invalid'])"
                             />
-                            <span class="input-group-text"> </span>
+                            <span class="input-group-text"
+                                  onmouseover="this.previousElementSibling.type='text';this.firstElementChild.className+='-off'"
+                                  onmouseout="this.previousElementSibling.type='password';this.firstElementChild.className=this.firstElementChild.className.replace('-off', '')"
+                            >
+                                <i class="ti ti-eye"></i>
+                            </span>
                         </div>
                     </div>
                     <div class="mb-2">
@@ -92,5 +106,6 @@
             $('input[name="remember_me"]').attr("checked", true);
         }
     </script>
+    <script src="{{ url_for('public', path='vendor/tabler/js/tabler.'+minify+'js') }}" defer></script>
     </body>
 {% endblock %}

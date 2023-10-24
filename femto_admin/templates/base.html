@@ -14,4 +14,7 @@
 </head>
     {% block html_body %}
     {% endblock %}
+    <script src="{{ url_for('public', path='vendor/jQuery/jquery.'+minify+'js') }}"></script>
+    {% block scripts %}
+    {% endblock %}
 </html>

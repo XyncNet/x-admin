@@ -4,8 +4,7 @@
     <div class="page page-center">
         <div class="container-tight py-4">
             {% include "components/alert_error.html" %}
-            <form class="card card-md" action="{{ request.app.admin_path }}/init"
-                  method="post" autocomplete="off">
+            <form class="card card-md" action="/reg" method="post" autocomplete="off">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">Create first admin</h2>
                     <div class="mb-3">
