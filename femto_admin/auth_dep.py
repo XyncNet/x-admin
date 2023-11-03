@@ -27,12 +27,12 @@ login_logo_url: str
 
 
 
-async def login(self, request: Request, redis: redis.Redis = Depends(get_redis)):
+async def login(request: Request, redis: redis.Redis = Depends(get_redis)):
     form = await request.form()
     username = form.get("username")
     password = form.get("password")
     remember_me = form.get("remember_me")
-    admin = await self.admin_model.get_or_none(username=username)
+    admin = await admin_model.get_or_none(username=username)
     if not admin or not admin.verify(password):
         return self.templates.TemplateResponse(
             "providers/login/login.html",

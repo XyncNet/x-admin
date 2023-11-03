@@ -20,7 +20,7 @@ from starlette.templating import Jinja2Templates, _TemplateResponse
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, UserCred, reg_user, login_for_access_token, EXPIRES, \
-    authenticate_user
+    authenticate_user, AuthFailReason
 from tortoise_api_model import Model, User
 
 import femto_admin
@@ -69,9 +69,9 @@ class Admin(Api):
         routes: [Route] = [
             APIRoute('/', dash_func or self.dash, name="Dashboard"),
             # auth routes:
-            APIRoute('/logout', auth_dep.logout),
+            # APIRoute('/logout', auth_dep.logout),
             APIRoute('/password', self.password_view, dependencies=[my]),
-            APIRoute('/password', auth_dep.password, methods=['POST'], dependencies=[my]),
+            # APIRoute('/password', auth_dep.password, methods=['POST'], dependencies=[my]),
         ]
         self.app.include_router(
             APIRouter(routes=routes),
@@ -114,12 +114,13 @@ class Admin(Api):
 
     async def login_view(
             self,
+            request: Request,
             reason: Annotated[str|None, Cookie()] = None,
             username: Annotated[str|None, Cookie()] = None,
             password: Annotated[str|None, Cookie()] = None
     ) -> _TemplateResponse:
         response = self.templates.TemplateResponse("providers/login/login.html", context={
-            # "request": request,
+            "request": request,
             "reason": reason,
             "username": username,
             "password": password,
@@ -138,9 +139,9 @@ class Admin(Api):
     @staticmethod
     async def login(username: Annotated[str, Form()], password: Annotated[str, Form()]):
         user_cred = await authenticate_user(username, password)
-        if isinstance(user_cred, dict) and (error := user_cred.get('error')):
+        if isinstance(user_cred, AuthFailReason):
             response = RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
-            response.set_cookie('reason', error)
+            response.set_cookie('reason', user_cred.name)
             response.set_cookie('username', username)
             response.set_cookie('password', password)
             return response
@@ -215,7 +216,7 @@ class Admin(Api):
     async def dt(self, request: Request, limit: int = 50, page: int = 1):
         async def render(obj: Model):
             def rel(val: dict):
-                return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/admin/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
+                return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
 
             def check(val, is_id: bool):
                 if isinstance(val, dict) and 'repr' in val.keys():
@@ -226,11 +227,11 @@ class Admin(Api):
                     return ' '.join(rel(v) for v in val)
                 return f'{val[:100]}..' if isinstance(val, str) and len(val) > 100 else val
 
-            return [check(val, key == 'id') for key, val in (await jsonable_encoder(obj)).items()]
+            # jsn = jsonable_encoder(obj)
+            return [check(val, key == 'id') for key, val in obj.items()]
 
         model: type[Model] = self.models.get(request.scope['path'][4:])
-        objects: [Model] = await model.all().prefetch_related(*model._meta.fetch_fields).limit(limit).offset(
-            limit * (page - 1))
+        objects: [Model] = await model.index(limit, page)
 
-        data = [await render(obj) for obj in objects]
+        data = [await render(obj) for obj in objects['data']]
         return ORJSONResponse({'data': data})

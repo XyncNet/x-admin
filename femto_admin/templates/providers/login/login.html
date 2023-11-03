@@ -49,7 +49,7 @@
                                     name="username"
                                     required
                                     type="text"
-                                    class="form-control {{ 'is-invalid' if reason=='login' }}"
+                                    class="form-control {{ 'is-invalid' if reason=='username' }}"
                                     placeholder="login_username_placeholder"
                                     {% if username %}value="{{ username }}"{% endif %}
                                     onchange="this.classList.remove(['is-invalid'])"
