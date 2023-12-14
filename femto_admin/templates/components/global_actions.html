@@ -1,6 +1,6 @@
 <div class="col-auto ms-auto d-print-none">
     <div class="btn-list">
-        {% if request.scope['endpoint'].__name__ in ['index'] and model %}
+        {% if (request.scope['endpoint'].__name__ if request.scope['endpoint'].__class__.__name__=='method' else request.scope['endpoint'].func.__name__) in ['index'] and model %}
         <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal"
            data-bs-target="#modal-{{ model.__name__ }}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"

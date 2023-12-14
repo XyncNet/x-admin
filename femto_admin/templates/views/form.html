@@ -5,8 +5,8 @@
 
 <div class="row mb-3">
     <form action="/api/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}" method="POST">
-        {#                    {% block modal_content %}#}
-        {#                    {% endblock %}#}
+        {% block modal_content %}
+        {% endblock %}
         {% for key, field in model.field_input_map().items() %}
             {% if not field.auto %}
                 <div class="col-lg-12 mb-3">

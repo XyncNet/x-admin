@@ -6,6 +6,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, APIRouter, Depends, Security, HTTPException, Form, Body, Cookie
 from fastapi.encoders import jsonable_encoder
+from fastapi.params import Path
 from fastapi.responses import ORJSONResponse
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
@@ -17,11 +18,12 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette import status
 from starlette.templating import Jinja2Templates, _TemplateResponse
-from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
+from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, UserCred, reg_user, login_for_access_token, EXPIRES, \
     authenticate_user, AuthFailReason
-from tortoise_api_model import Model, User
+from tortoise_api_model import Model, User, PydList
 
 import femto_admin
 from femto_admin import auth_dep
@@ -37,6 +39,7 @@ class Admin(Api):
             title: str = "Admin",
             static_dir: str = None,
             logo: str | bool = None,
+            exc_models: [str] = [],
     ):
         """
         Parameters:
@@ -44,7 +47,7 @@ class Admin(Api):
             # auth_provider: Authentication Provider
         """
         # Api init
-        super().__init__(models_module, debug, title)
+        super().__init__(models_module, debug, title, exc_models)
         # Authenticable model (maybe overriden)
         user_model = self.models['User']
 
@@ -213,25 +216,27 @@ class Admin(Api):
             'bfms': bfms,
         })
 
-    async def dt(self, request: Request, limit: int = 50, page: int = 1):
-        async def render(obj: Model):
+    async def dt(self, request: Request, length: int = 10, offset: int = 0):
+        model: type[Model] = self.models.get(request.scope['path'][4:])
+
+        def render(obj: Model):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
 
-            def check(val, is_id: bool):
-                if isinstance(val, dict) and 'repr' in val.keys():
+            def check(val, key: str):
+                if key=='id':
+                    return rel({'type': model.__name__, 'id': val, 'repr': val})
+                if isinstance(val, Model):
+                    val = {'type': val.__class__.__name__, 'id': val.id, 'repr': val.repr()}
                     return rel(val)
-                elif is_id:
-                    return rel({'type': obj.__class__.__name__, 'id': val, 'repr': val})
-                elif isinstance(val, list) and val and isinstance(val[0], dict) and 'repr' in val[0].keys():
-                    return ' '.join(rel(v) for v in val)
+                elif isinstance(val, ReverseRelation):
+                    r = [rel({'type': v.__class__.__name__, 'id': v.id, 'repr': v.repr()}) for v in val.related_objects]
+                    return ' '.join(r)
                 return f'{val[:100]}..' if isinstance(val, str) and len(val) > 100 else val
 
-            # jsn = jsonable_encoder(obj)
-            return [check(val, key == 'id') for key, val in obj.items()]
+            return [check(obj.__getattribute__(key), key) for key in obj._meta.fields_map]
 
-        model: type[Model] = self.models.get(request.scope['path'][4:])
-        objects: [Model] = await model.index(limit, page)
-
-        data = [await render(obj) for obj in objects['data']]
-        return ORJSONResponse({'data': data})
+        objs: [Model] = await model.pageQuery(length, offset, True)
+        data = [render(obj) for obj in objs]
+        total = len(data)+offset if length-len(data) else await model.all().count()
+        return {'draw': int(request.query_params['draw']), 'recordsTotal': 100, 'recordsFiltered': 100, 'data': data}

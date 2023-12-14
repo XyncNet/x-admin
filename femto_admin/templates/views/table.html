@@ -18,7 +18,10 @@
     <script defer src="{{ url_for('public', path='vendor/DataTables/js/dataTables.bootstrap5.'+minify+'js') }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            new DataTable('#dt', {ajax: '/dt/{{ model.__name__ }}'})
+            new DataTable('#dt', {
+                ajax: '/dt/{{ model.__name__ }}',
+                serverSide: true
+            })
         });
     </script>
 
