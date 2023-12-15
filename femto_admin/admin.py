@@ -216,7 +216,7 @@ class Admin(Api):
             'bfms': bfms,
         })
 
-    async def dt(self, request: Request, length: int = 10, offset: int = 0):
+    async def dt(self, request: Request, length: int = 100, offset: int = 0):
         model: type[Model] = self.models.get(request.scope['path'][4:])
 
         def render(obj: Model):
@@ -232,11 +232,11 @@ class Admin(Api):
                 elif isinstance(val, ReverseRelation):
                     r = [rel({'type': v.__class__.__name__, 'id': v.id, 'repr': v.repr()}) for v in val.related_objects]
                     return ' '.join(r)
-                return f'{val[:100]}..' if isinstance(val, str) and len(val) > 100 else val
+                return f'{val[:120]}..' if isinstance(val, str) and len(val) > 120 else val
 
             return [check(obj.__getattribute__(key), key) for key in obj._meta.fields_map]
 
         objs: [Model] = await model.pageQuery(length, offset, True)
         data = [render(obj) for obj in objs]
         total = len(data)+offset if length-len(data) else await model.all().count()
-        return {'draw': int(request.query_params['draw']), 'recordsTotal': 100, 'recordsFiltered': 100, 'data': data}
+        return {'draw': int(request.query_params['draw']), 'recordsTotal': total, 'recordsFiltered': total, 'data': data}

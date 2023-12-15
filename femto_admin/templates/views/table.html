@@ -20,7 +20,11 @@
         document.addEventListener("DOMContentLoaded", function () {
             new DataTable('#dt', {
                 ajax: '/dt/{{ model.__name__ }}',
-                serverSide: true
+                serverSide: true,
+                lengthMenu: [
+                    [20, 50, 100, -1],
+                    [20, 50, 100, 'All'],
+                ]
             })
         });
     </script>
