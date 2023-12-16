@@ -1,6 +1,6 @@
 {% macro table(model) -%}
 
-    <link href="{{ url_for('public', path='vendor/DataTables/css/dataTables.bootstrap5.'+minify+'css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('public', path='vendor/DataTables/css/dataTables.'+minify+'css') }}" rel="stylesheet"/>
 
     <table id="dt" class="table table-striped" style="width:100%">
         <thead>
@@ -15,7 +15,6 @@
     </table>
 
     <script defer src="{{ url_for('public', path='vendor/DataTables/js/jquery.dataTables.'+minify+'js') }}"></script>
-    <script defer src="{{ url_for('public', path='vendor/DataTables/js/dataTables.bootstrap5.'+minify+'js') }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             new DataTable('#dt', {

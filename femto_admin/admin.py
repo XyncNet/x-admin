@@ -57,8 +57,8 @@ class Admin(Api):
             self.app.mount('/' + static_dir, StaticFiles(directory=static_dir), name='my-public'),
             if logo is not None:
                 templates.env.globals["logo"] = logo
-        if path.exists(favicon_path := f'./{static_dir or "statics/placeholders"}/favicon.ico'):
-            self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
+        favicon_path = f'./{static_dir or "statics/placeholders"}/favicon.ico'
+        self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
 
         templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
         templates.env.globals["title"] = title
