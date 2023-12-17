@@ -1,20 +1,20 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title>{{ title }}</title>
-    <!-- CSS files -->
-    <link href="{{ url_for('public', path='vendor/tabler/css/tabler.'+minify+'css') }}" rel="stylesheet"/>
-    <link href="{{ url_for('public', path='vendor/tabler/css/tabler-icons.'+minify+'css') }}" rel="stylesheet"/>
-    <link href="{{ url_for('public', path='css/main.css') }}" rel="stylesheet"/>
-    {% block styles %}
-    {% endblock %}
-</head>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+        <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+        <title>{{ title }}</title>
+        <!-- CSS files -->
+        <link href="{{ url_for('public', path='vendor/tabler/css/tabler.'+minify+'css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('public', path='vendor/tabler/css/tabler-icons.'+minify+'css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('public', path='css/main.css') }}" rel="stylesheet"/>
+        {% block styles %}
+        {% endblock %}
+    </head>
     {% block html_body %}
     {% endblock %}
-    <script src="{{ url_for('public', path='vendor/jQuery/jquery.'+minify+'js') }}"></script>
+        <script src="{{ url_for('public', path='vendor/jQuery/jquery.'+minify+'js') }}"></script>
     {% block scripts %}
     {% endblock %}
 </html>

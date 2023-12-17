@@ -1,42 +1,42 @@
 {% extends "base.html" %}
 {% block html_body %}
 <body data-bs-theme="dark">
-<div class="page">
-    <!-- Sidebar -->
-    {% include "components/aside.html" %}
-    <!-- Navbar -->
-    {% include "components/header.html" %}
+    <div class="page">
+        <!-- Sidebar -->
+        {% include "components/aside.html" %}
+        <!-- Navbar -->
+        {% include "components/header.html" %}
 
-    <div class="page-wrapper">
-        <!-- Page header -->
-        <div class="page-header d-print-none">
-            <div class="container-fluid">
-                <div class="row g-2 align-items-center">
-                    <div class="col">
-                        <!-- Page pre-title -->
-                        <div class="page-pretitle">
-                            {{ subtitle or '' }}
+        <div class="page-wrapper">
+            <!-- Page header -->
+            <div class="page-header d-print-none">
+                <div class="container-fluid">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <!-- Page pre-title -->
+                            <div class="page-pretitle">
+                                {{ subtitle or '' }}
+                            </div>
+                            <h2 class="page-title">
+                                {{ (model and model.__name__) or title or '' }}
+                            </h2>
                         </div>
-                        <h2 class="page-title">
-                            {{ (model and model.__name__) or title or '' }}
-                        </h2>
+                        <!-- Page title actions -->
+                        {% include "components/global_actions.html" %}
                     </div>
-                    <!-- Page title actions -->
-                    {% include "components/global_actions.html" %}
                 </div>
             </div>
-        </div>
-        <!-- Page body -->
-        <div class="page-body">
-            <div class="container-fluid">
-                {% block body %}
-                {% endblock %}
+            <!-- Page body -->
+            <div class="page-body">
+                <div class="container-fluid">
+                    {% block body %}
+                    {% endblock %}
+                </div>
             </div>
+            {% include "components/footer.html" %}
         </div>
-        {% include "components/footer.html" %}
     </div>
-</div>
-
-<script src="{{ url_for('public', path='vendor/tabler/js/dark-theme.'+minify+'js') }}"></script>
+    <script src="{{ url_for('public', path='vendor/tabler/js/dark-theme.'+minify+'js') }}"></script>
+    <script src="{{ url_for('public', path='vendor/tabler/js/tabler.'+minify+'js') }}"></script>
 </body>
 {% endblock %}
