@@ -18,7 +18,10 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             new DataTable('#dt', {
-                ajax: '/dt/{{ model.__name__ }}',
+                ajax: {
+                    url: '/dt/{{ model.__name__ }}',
+                    type: 'POST'
+                },
                 serverSide: true,
                 lengthMenu: [
                     [20, 50, 100, -1],

@@ -1,16 +1,14 @@
 from datetime import datetime
+from enum import StrEnum
 from functools import partial
-from os import path
 from types import ModuleType
-from typing import Annotated
+from typing import Annotated, Type, List, Dict, Literal
 
-from fastapi import FastAPI, APIRouter, Depends, Security, HTTPException, Form, Body, Cookie
-from fastapi.encoders import jsonable_encoder
-from fastapi.params import Path
-from fastapi.responses import ORJSONResponse
+from fastapi import FastAPI, APIRouter, Depends, Security, HTTPException, Form, Cookie, Query, Body, Path
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
+from pydantic import BaseModel
 from redis.asyncio import Redis
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
@@ -27,6 +25,26 @@ from tortoise_api_model import Model, User, PydList
 
 import femto_admin
 from femto_admin import auth_dep
+from femto_admin.utils.parse import parse_fs
+
+
+class Dir(StrEnum):
+    asc = 'asc'
+    desc = 'desc'
+
+
+class Order(BaseModel):
+    column: int
+    dir: Dir = Dir.asc.value
+
+
+class Dtp(BaseModel):
+    draw: int
+    # columns: List[Column]
+    order: List[Order]
+    start: int
+    length: int
+    # search: Search
 
 
 class Admin(Api):
@@ -109,8 +127,7 @@ class Admin(Api):
         ar = APIRouter(tags=['admin'], dependencies=[Depends(self.auth_middleware)])
         for name, model in self.models.items():
             pyd_model = pydantic_model_creator(model)
-            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'],
-                             response_model=[]),
+            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'], response_model=[]),
             ar.add_api_route(f'/{name}/{"{oid}"}', self.edit, name='Edit view'),
             ar.add_api_route('/' + name, partial(self.index, ), name=name + ' list')
         self.app.include_router(ar)
@@ -193,7 +210,7 @@ class Admin(Api):
         })
 
     async def index(self, request: Request):
-        model: type[Model] = self.models.get(request.scope['path'][1:])
+        model: Type[Model] = self.models.get(request.scope['path'][1:])
         await model.load_rel_options()
         return self.templates.TemplateResponse("index.html", {
             'model': model,
@@ -202,7 +219,7 @@ class Admin(Api):
         })
 
     async def edit(self, request: Request, model: str):
-        model: type[Model] = self.models.get(model)
+        model: Type[Model] = self.models.get(model)
         oid = request.path_params['oid']
         await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
@@ -216,8 +233,12 @@ class Admin(Api):
             'bfms': bfms,
         })
 
-    async def dt(self, request: Request, length: int = 100, start: int = 0):
-        model: type[Model] = self.models.get(request.scope['path'][4:])
+    async def dt(self, request: Request): # length: int = 100, start: int = 0
+        model: Type[Model] = self.models.get(request.scope['path'][4:])
+        form = await request.body()
+        form = parse_fs(form.decode())
+        col_names = list(model.field_input_map().keys())
+        order = [('-' if ord['dir']=='desc' else '')+col_names[ord['column']] for ord in form['order']]
 
         def render(obj: Model):
             def rel(val: dict):
@@ -236,7 +257,7 @@ class Admin(Api):
 
             return [check(obj.__getattribute__(key), key) for key in obj._meta.fields_map]
 
-        objs: [Model] = await model.pageQuery(length, start, True)
+        objs: [Model] = await model.pageQuery(form['length'], form['start'], order, True)
         data = [render(obj) for obj in objs]
-        total = len(data)+start if length-len(data) else await model.all().count()
-        return {'draw': int(request.query_params['draw']), 'recordsTotal': total, 'recordsFiltered': total, 'data': data}
+        total = len(data)+form['start'] if form['length']-len(data) else await model.all().count()
+        return {'draw': int(form['draw']), 'recordsTotal': total, 'recordsFiltered': total, 'data': data}
