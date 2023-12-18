@@ -5,10 +5,8 @@
     <table id="dt" class="table table-striped" style="width:100%">
         <thead>
         <tr>
-            {% for field in model.field_input_map() %}
-                {% if not field.endswith('_id') %}
-                    <th>{{ field }}</th>
-                {% endif %}
+            {% for field in cols %}
+                <th>{{ field['data'] }}</th>
             {% endfor %}
         </tr>
         </thead>
@@ -22,6 +20,7 @@
                     url: '/dt/{{ model.__name__ }}',
                     type: 'POST'
                 },
+                columns: {{ cols | tojson }},
                 serverSide: true,
                 lengthMenu: [
                     [20, 50, 100, -1],

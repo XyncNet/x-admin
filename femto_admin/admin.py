@@ -211,9 +211,12 @@ class Admin(Api):
 
     async def index(self, request: Request):
         model: Type[Model] = self.models.get(request.scope['path'][1:])
+        meta = model._meta
+        col_names = [{'data': c, 'orderable': c not in meta.fetch_fields or c in meta.fk_fields} for c in meta.fields_map if not c.endswith('_id')]
         await model.load_rel_options()
         return self.templates.TemplateResponse("index.html", {
             'model': model,
+            'cols': col_names,
             'subtitle': model._meta.table_description,
             'request': request,
         })
@@ -235,10 +238,11 @@ class Admin(Api):
 
     async def dt(self, request: Request): # length: int = 100, start: int = 0
         model: Type[Model] = self.models.get(request.scope['path'][4:])
+        meta = model._meta
         form = await request.body()
         form = parse_fs(form.decode())
         col_names = list(model.field_input_map().keys())
-        order = [('-' if ord['dir']=='desc' else '')+col_names[ord['column']] for ord in form['order']]
+        order = [('-' if ord['dir']=='desc' else '')+(col_name+'__'+meta.fields_map[col_name].related_model._name if (col_name:=col_names[ord['column']]) in meta.fk_fields else col_name) for ord in form['order']]
 
         def render(obj: Model):
             def rel(val: dict):
@@ -255,7 +259,7 @@ class Admin(Api):
                     return ' '.join(r)
                 return f'{val[:120]}..' if isinstance(val, str) and len(val) > 120 else val
 
-            return [check(obj.__getattribute__(key), key) for key in obj._meta.fields_map]
+            return {key: check(obj.__getattribute__(key), key) for key in obj._meta.fields_map if not key.endswith('_id')}
 
         objs: [Model] = await model.pageQuery(form['length'], form['start'], order, True)
         data = [render(obj) for obj in objs]
