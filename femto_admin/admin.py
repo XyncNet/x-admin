@@ -211,22 +211,20 @@ class Admin(Api):
 
     async def index(self, request: Request):
         model: Type[Model] = self.models.get(request.scope['path'][1:])
-        meta = model._meta
-        col_names = [{'data': c, 'orderable': c not in meta.fetch_fields or c in meta.fk_fields} for c in meta.fields_map if not c.endswith('_id')]
         await model.load_rel_options()
         return self.templates.TemplateResponse("index.html", {
             'model': model,
-            'cols': col_names,
             'subtitle': model._meta.table_description,
             'request': request,
         })
 
-    async def edit(self, request: Request, model: str):
-        model: Type[Model] = self.models.get(model)
+    async def edit(self, request: Request):
+        mod_name = request.scope['path'][1:].split('/')[0]
+        model: Type[Model] = self.models.get(mod_name)
         oid = request.path_params['oid']
         await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
-        bfms = [getattr(obj, k).remote_model for k in model._meta.backward_fk_fields]
+        bfms = {getattr(obj, k).remote_model: [ros.pk for ros in getattr(obj, k)] for k in model._meta.backward_fk_fields}
         [await bfm.load_rel_options() for bfm in bfms]
         return self.templates.TemplateResponse("edit.html", {
             'model': model,

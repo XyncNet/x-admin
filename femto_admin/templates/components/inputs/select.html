@@ -1,6 +1,6 @@
 <select class="form-select" name="{{ key }}{{ field.multiple and '[]' }}" id="{{ 'form-select-'+key }}" {{ field.multiple and 'multiple' }}>
     {% for val, name in field.options.items() %}
-        <option value="{{ val }}" {% if val == (value and (value.pk or value)) %}selected{% endif %}>
+        <option value="{{ val }}" {% if (field.multiple and val in value) or (not field.multiple and val == (value and (value.pk or value))) %}selected{% endif %}>
             {{ name }}
         </option>
     {% endfor %}

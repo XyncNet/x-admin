@@ -4,11 +4,12 @@
 {% from "views/form.html" import form with context %}
 
 {% block body %}
-    {{ form(model=model) }}
-    {% for bfm in bfms %}
-        {% with modal_model=bfm %}
-            {% include "components/modal.html" %}
-        {% endwith %}
-        {{ table(model=bfm) }}
-    {% endfor %}
+    {{ form(model=model, bfms=bfms) }}
+{#    {% for bfm in bfms %}#}
+{#        {% with modal_model=bfm %}#}
+{#            {% include "components/modal.html" %}#}
+{#        {% endwith %}#}
+{#        <h2>{{ bfm.__name__ }}</h2>#}
+{#        {{ table(model=bfm) }}#}
+{#    {% endfor %}#}
 {% endblock %}

@@ -1,17 +1,16 @@
-{% macro form(model) -%}
+{% macro form(model, bfms) -%}
 <link href="{{ url_for('public', path='vendor/select2/select2.min.css') }}" rel="stylesheet"/>
 <script defer src="{{ url_for('public', path='vendor/select2/select2.min.js') }}"></script>
 <script defer src="{{ url_for('public', path='vendor/DataTables/js/jquery.dataTables.'+minify+'js') }}"></script>
-
 <div class="row mb-3">
-    <form action="/api/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}" method="POST">
+    <form action="/v2/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}" method="POST">
         {% block modal_content %}
         {% endblock %}
         {% for key, field in model.field_input_map().items() %}
             {% if not field.auto %}
                 <div class="col-lg-12 mb-3">
                     <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
-                    {% with key=field.source_field or key, value=obj and obj[key] %}
+                    {% with key=field.source_field or key, value=bfms[obj.__getattribute__(key).remote_model] if obj and bfms.get(obj.__getattribute__(key).remote_model) else obj and obj[key] %}
                         {% include "components/inputs/"+field.input+".html" %}
                     {% endwith %}
                 </div>
