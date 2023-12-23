@@ -20,7 +20,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
 from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, UserCred, reg_user, login_for_access_token, EXPIRES, \
-    authenticate_user, AuthFailReason
+    authenticate_user, AuthFailReason, UserSchema
 from tortoise_api_model import Model, User, PydList
 
 import femto_admin
@@ -173,7 +173,7 @@ class Admin(Api):
             response = RedirectResponse(url='/', status_code=status.HTTP_303_SEE_OTHER)
             response.set_cookie(
                 'token',
-                jwt['access_token'],
+                jwt.access_token,
                 expires=EXPIRES,
                 path='/',
                 httponly=True,
@@ -185,11 +185,12 @@ class Admin(Api):
     @staticmethod
     async def reg(request: Request):
         obj = await request.form()
-        if user := await reg_user(UserCred.model_validate(obj)):
+        if user := await reg_user(UserSchema.model_validate(obj)):
             # todo get permissions (scopes) from user.role in `scope`:str (separated by spaces)
             scopes = ["my", "read"]
             jwt = await login_for_access_token(
-                OAuth2PasswordRequestForm(username=user.username, password=obj['password'], scope=' '.join(scopes)))
+                OAuth2PasswordRequestForm(username=user.username, password=obj['password'], scope=' '.join(scopes))
+            )
             response = RedirectResponse(url='/', status_code=status.HTTP_303_SEE_OTHER)
             response.set_cookie(
                 'token',
