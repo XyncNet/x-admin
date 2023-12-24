@@ -19,7 +19,7 @@ from starlette.templating import Jinja2Templates, _TemplateResponse
 from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
 from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
-from tortoise_api.oauth import get_current_active_user, my, read, UserCred, reg_user, login_for_access_token, EXPIRES, \
+from tortoise_api.oauth import get_current_active_user, my, read, reg_user, login_for_access_token, EXPIRES, \
     authenticate_user, AuthFailReason, UserSchema
 from tortoise_api_model import Model, User, PydList
 
