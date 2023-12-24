@@ -3,7 +3,7 @@
     <table id="dt-{{ model.__name__ }}" class="table table-striped" style="width:100%">
         <thead>
         <tr>
-            {% for field in cols %}
+            {% for field in model.cols() %}
                 <th>{{ field['data'] }}</th>
             {% endfor %}
         </tr>
