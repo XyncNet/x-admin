@@ -20,7 +20,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
 from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, reg_user, login_for_access_token, EXPIRES, \
-    authenticate_user, AuthFailReason, UserSchema
+    authenticate_user, AuthFailReason, UserSchema, AuthException
 from tortoise_api_model import Model, User, PydList
 
 import femto_admin
@@ -137,7 +137,8 @@ class Admin(Api):
             request: Request,
             reason: Annotated[str|None, Cookie()] = None,
             username: Annotated[str|None, Cookie()] = None,
-            password: Annotated[str|None, Cookie()] = None
+            password: Annotated[str|None, Cookie()] = None,
+            remember_me: Annotated[str|None, Cookie()] = None
     ) -> _TemplateResponse:
         response = self.templates.TemplateResponse("providers/login/login.html", context={
             "request": request,
@@ -157,11 +158,13 @@ class Admin(Api):
         return self.templates.TemplateResponse("init.html", context={"request": request})
 
     @staticmethod
-    async def login(username: Annotated[str, Form()], password: Annotated[str, Form()]):
-        user_cred = await authenticate_user(username, password)
-        if isinstance(user_cred, AuthFailReason):
-            response = RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
-            response.set_cookie('reason', user_cred.name)
+    async def login(username: Annotated[str, Form()], password: Annotated[str, Form()], remember_me: Annotated[str, Form()] = ''):
+        response = RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
+        response.set_cookie('remember_me', remember_me)
+        try:
+            user_cred = await authenticate_user(username, password)
+        except AuthException as e:
+            response.set_cookie('reason', e.detail.name)
             response.set_cookie('username', username)
             response.set_cookie('password', password)
             return response
@@ -170,7 +173,8 @@ class Admin(Api):
             scopes = ["my", "read"]
             jwt = await login_for_access_token(
                 OAuth2PasswordRequestForm(username=username, password=password, scope=' '.join(scopes)))
-            response = RedirectResponse(url='/', status_code=status.HTTP_303_SEE_OTHER)
+            response.url = '/'
+            response.headers['location'] = '/'
             response.set_cookie(
                 'token',
                 jwt.access_token,

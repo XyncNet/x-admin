@@ -102,8 +102,8 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
     <script>
         let on = Cookies.get("remember_me");
-        if (on !== "") {
-            $('input[name="remember_me"]').attr("checked", true);
+        if (on) {
+            document.querySelector('input[name="remember_me"]').setAttribute('checked', true)
         }
     </script>
     <script src="{{ url_for('public', path='vendor/tabler/js/tabler.'+minify+'js') }}" defer></script>
