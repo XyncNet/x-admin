@@ -3,7 +3,7 @@
 <script defer src="{{ url_for('public', path='vendor/select2/select2.min.js') }}"></script>
 <script defer src="{{ url_for('public', path='vendor/DataTables/js/jquery.dataTables.'+minify+'js') }}"></script>
 <div class="row mb-3">
-    <form action="/v2/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}" method="POST">
+    <form>
         {% block modal_content %}
         {% endblock %}
         {% for key, field in model.field_input_map().items() %}
@@ -16,9 +16,39 @@
                 </div>
             {% endif %}
         {% endfor %}
-        <button class="btn btn-primary ms-auto" data-bs-dismiss="modal" type="submit">
+        <button class="btn btn-primary ms-auto" {{ '' if obj else 'data-bs-dismiss=modal' }} type="submit">
             {{ 'Edit' if obj else 'New' }} {{ model.__name__ }}
         </button>
+        {% if obj %}
+        <button class="btn btn-danger ms-auto" {{ '' if obj else 'data-bs-dismiss=modal' }} type="button" onclick="del()">
+            Delete
+        </button>
+        {% endif %}
     </form>
 </div>
+<script>
+document.getElementsByTagName('form')[0].onsubmit = async e => {
+    e.preventDefault()
+    const data = Object.fromEntries(new FormData(e.target))
+    await fetch("/v2/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}", {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    {% if obj %}
+    window.location = '/{{ model.__name__ }}'
+    {% endif %}
+}
+{% if obj %}
+const del = async e => {
+    await fetch("/v2/{{ model.__name__ }}/{{ obj.pk | string }}", {
+        method: 'DELETE',
+    })
+    window.location = '/{{ model.__name__ }}'
+}
+{% endif %}
+</script>
 {%- endmacro %}
