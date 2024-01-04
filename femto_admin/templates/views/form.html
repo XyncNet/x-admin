@@ -40,6 +40,8 @@ document.getElementsByTagName('form')[0].onsubmit = async e => {
     })
     {% if obj %}
     window.location = '/{{ model.__name__ }}'
+    {% else %}
+    $('#dt-{{ model.__name__ }}').DataTable().ajax.reload()
     {% endif %}
 }
 {% if obj %}
