@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import StrEnum
 from functools import partial
 from types import ModuleType
-from typing import Annotated, Type, List, Dict, Literal
+from typing import Annotated, Type, List
 
-from fastapi import FastAPI, APIRouter, Depends, Security, HTTPException, Form, Cookie, Query, Body, Path
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Form, Cookie
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
@@ -12,16 +12,17 @@ from pydantic import BaseModel
 from redis.asyncio import Redis
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
-from starlette.routing import Mount, Route
+from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from starlette import status
 from starlette.templating import Jinja2Templates, _TemplateResponse
-from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
+from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, reg_user, login_for_access_token, EXPIRES, \
     authenticate_user, AuthFailReason, UserSchema, AuthException
 from tortoise_api_model import Model, User, PydList
+from tortoise_api_model.model import UserReg
 
 import femto_admin
 from femto_admin import auth_dep
@@ -189,7 +190,7 @@ class Admin(Api):
     @staticmethod
     async def reg(request: Request):
         obj = await request.form()
-        if user := await reg_user(UserSchema.model_validate(obj)):
+        if user := await reg_user(UserReg.model_validate(obj)):
             # todo get permissions (scopes) from user.role in `scope`:str (separated by spaces)
             scopes = ["my", "read"]
             jwt = await login_for_access_token(
