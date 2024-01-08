@@ -1,7 +1,4 @@
 {% macro form(model, bfms) -%}
-<link href="{{ url_for('public', path='vendor/select2/select2.min.css') }}" rel="stylesheet"/>
-<script defer src="{{ url_for('public', path='vendor/select2/select2.min.js') }}"></script>
-<script defer src="{{ url_for('public', path='vendor/DataTables/js/jquery.dataTables.'+minify+'js') }}"></script>
 <div class="row mb-3">
     <form>
         {% block modal_content %}
@@ -26,7 +23,9 @@
         {% endif %}
     </form>
 </div>
+
 <script>
+{# form submit #}
 document.getElementsByTagName('form')[0].onsubmit = async e => {
     e.preventDefault()
     const data = Object.fromEntries(new FormData(e.target))
@@ -44,6 +43,7 @@ document.getElementsByTagName('form')[0].onsubmit = async e => {
     $('#dt-{{ model.__name__ }}').DataTable().ajax.reload()
     {% endif %}
 }
+{# delete button #}
 {% if obj %}
 const del = async e => {
     await fetch("/v2/{{ model.__name__ }}/{{ obj.pk | string }}", {
@@ -52,5 +52,6 @@ const del = async e => {
     window.location = '/{{ model.__name__ }}'
 }
 {% endif %}
+
 </script>
 {%- endmacro %}

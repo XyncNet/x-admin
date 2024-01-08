@@ -9,17 +9,11 @@
         <link href="{{ url_for('public', path='vendor/tabler/css/tabler.'+minify+'css') }}" rel="stylesheet"/>
         <link href="{{ url_for('public', path='vendor/tabler/css/tabler-icons.'+minify+'css') }}" rel="stylesheet"/>
         <link href="{{ url_for('public', path='css/main.css') }}" rel="stylesheet"/>
-        <link href="{{ url_for('public', path='vendor/select2/select2.min.css') }}" rel="stylesheet"/>
         {% block styles %}
         {% endblock %}
     </head>
     {% block html_body %}
     {% endblock %}
-        <script src="{{ url_for('public', path='vendor/jQuery/jquery.'+minify+'js') }}"></script>
-        <script src="{{ url_for('public', path='vendor/select2/select2.min.js') }}"></script>
-        <script>
-            $('select').select2()
-        </script>
     {% block scripts %}
     {% endblock %}
 </html>

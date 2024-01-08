@@ -7,5 +7,6 @@
 {% include "components/modal.html" %}
 {% endblock %}
 {% block scripts %}
-    {# just for modal for now #}
+    {{ super() }}
+    <script defer src="{{ url_for('public', path='vendor/DataTables/js/jquery.dataTables.'+minify+'js') }}"></script>
 {% endblock %}

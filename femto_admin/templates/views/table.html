@@ -11,17 +11,16 @@
     </table>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            new DataTable('#dt-{{ model.__name__ }}', {
-                ajax: {
-                    url: '/dt/{{ model.__name__ }}',
-                    type: 'POST'
-                },
-                columns: {{ model.cols() | tojson }},
-                serverSide: true,
-                lengthMenu: [20, 100, 1000]
-            })
-        });
+    document.addEventListener("DOMContentLoaded", () => {
+        new DataTable('#dt-{{ model.__name__ }}', {
+            ajax: {
+                url: '/dt/{{ model.__name__ }}',
+                type: 'POST'
+            },
+            columns: {{ model.cols() | tojson }},
+            serverSide: true,
+            lengthMenu: [20, 100, 1000],
+        })
+    });
     </script>
-
 {%- endmacro %}

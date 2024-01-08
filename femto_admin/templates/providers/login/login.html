@@ -4,14 +4,10 @@
     <div class="page page-center">
         <div class="container-tight py-4">
             <div class="text-center mb-4">
-                {% if login_logo_url %}
-                    <a href="../.."
-                    ><img
-                            src="{{ login_logo_url }}"
-                            height="36"
-                            alt=""
-                    /></a>
-                {% endif %}
+                <img src="{% if logo %}{{ url_for('my-public', path=logo) }}{% else %}/statics/placeholders/logo/logo-primary.svg{% endif %}"
+                     height="36"
+                     alt=""
+                />
             </div>
             {% if error %}
                 <div
@@ -38,9 +34,9 @@
                     autocomplete="off"
             >
                 <div class="card-body">
-                    <h2 class="card-title text-center mb-4">
-                        {{ login_title }}
-                    </h2>
+                    <h1 class="card-title text-center mb-4">
+                        {{ title }}
+                    </h1>
                     <div class="mb-3">
                         <label class="form-label">username</label>
                         <div class="input-group input-group">
@@ -50,7 +46,7 @@
                                     required
                                     type="text"
                                     class="form-control {{ 'is-invalid' if reason=='username' }}"
-                                    placeholder="login_username_placeholder"
+                                    placeholder="your username"
                                     {% if username %}value="{{ username }}"{% endif %}
                                     onchange="this.classList.remove(['is-invalid'])"
                             />
@@ -63,7 +59,7 @@
                         </label>
                         <div class="input-group">
                             <input
-                                    placeholder="login_password_placeholder"
+                                    placeholder="your password"
                                     required
                                     name="password"
                                     type="password"
@@ -92,20 +88,20 @@
                     </div>
                     <div class="form-footer">
                         <button type="submit" class="btn btn-primary w-100">
-                            sign_in
+                            LogIn
                         </button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+    </body>
+{% endblock %}
+{% block scripts %}
+    <script src="{{ url_for('public', path='vendor/cookie.min.js') }}"></script>
     <script>
-        let on = Cookies.get("remember_me");
-        if (on) {
+        if (Cookies.get("remember_me")) {
             document.querySelector('input[name="remember_me"]').setAttribute('checked', true)
         }
     </script>
-    <script src="{{ url_for('public', path='vendor/tabler/js/tabler.'+minify+'js') }}" defer></script>
-    </body>
 {% endblock %}

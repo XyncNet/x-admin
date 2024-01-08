@@ -10,4 +10,6 @@
         <small class="form-hint">{{ help_text }}</small>
     </div>
 {% endif %}
-{#{% include "components/select.html" %}#}
+<script>
+    $('select#{{ 'form-select-'+key }}').select2({minimumResultsForSearch: 20})
+</script>
