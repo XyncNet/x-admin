@@ -1,10 +1,10 @@
 {% macro table(model) -%}
 
-    <table id="dt-{{ model.__name__ }}" class="table table-striped" style="width:100%">
+    <table id="dt-{{ model_name }}" class="table table-striped" style="width:100%">
         <thead>
         <tr>
-            {% for field in model.cols() %}
-                <th>{{ field['data'] }}</th>
+            {% for field in fields %}
+                <th>{{ field.name }}</th>
             {% endfor %}
         </tr>
         </thead>
@@ -12,12 +12,12 @@
 
     <script>
     document.addEventListener("DOMContentLoaded", () => {
-        new DataTable('#dt-{{ model.__name__ }}', {
+        new DataTable('#dt-{{ model_name }}', {
             ajax: {
-                url: '/dt/{{ model.__name__ }}',
+                url: '/dt/{{ model_name }}',
                 type: 'POST'
             },
-            columns: {{ model.cols() | tojson }},
+            columns: {{ fields | tojson }},
             serverSide: true,
             lengthMenu: [20, 100, 1000],
         })

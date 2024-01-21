@@ -3,7 +3,6 @@ from enum import StrEnum
 from functools import partial
 from types import ModuleType
 from typing import Annotated, Type, List
-
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Form, Cookie
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
@@ -21,8 +20,8 @@ from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, reg_user, login_for_access_token, EXPIRES, \
     authenticate_user, AuthFailReason, UserSchema, AuthException
-from tortoise_api_model import Model, User, PydList
-from tortoise_api_model.model import UserReg
+from tortoise_api_model import Model, User
+from tortoise_api_model.pydantic import UserReg
 
 import femto_admin
 from femto_admin import auth_dep
@@ -216,12 +215,17 @@ class Admin(Api):
         })
 
     async def index(self, request: Request):
-        model: Type[Model] = self.models.get(request.scope['path'][1:])
-        await model.load_rel_options()
+        model_name: str = request.scope['path'][1:]
+        model: Type[Model] = self.models[model_name]
+        pyd = model.pydListItem()
+        fields = {key: {'type': f.annotation, 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
         return self.templates.TemplateResponse("index.html", {
-            'model': model,
-            'subtitle': model._meta.table_description,
-            'request': request,
+            'model': pyd,
+            'name': model_name,
+            'fields': fields,
+            'subtitle': model._meta.table_description or model_name,
+            'is_index_page': True,
+            'request': request
         })
 
     async def edit(self, request: Request):
@@ -245,6 +249,7 @@ class Admin(Api):
         meta = model._meta
         form = await request.body()
         form = parse_fs(form.decode())
+        data = await model.pagePyd(form['length'], form['start'])
         col_names = list(model.field_input_map().keys())
         order = [('-' if ord['dir']=='desc' else '')+(col_name+'__'+meta.fields_map[col_name].related_model._name if (col_name:=col_names[ord['column']]) in meta.fk_fields else col_name) for ord in form['order']]
 
@@ -259,13 +264,12 @@ class Admin(Api):
                     val = {'type': val.__class__.__name__, 'id': val.id, 'repr': val.repr()}
                     return rel(val)
                 elif isinstance(val, ReverseRelation):
-                    r = [rel({'type': v.__class__.__name__, 'id': v.id, 'repr': v.repr()}) for v in val.related_objects]
+                    r = [rel({'type': v.__class__.__name__, 'id': v.id, 'repr': v.repr(model)}) for v in val.related_objects]
                     return ' '.join(r)
                 return f'{val[:120]}..' if isinstance(val, str) and len(val) > 120 else val
 
             return {key: check(obj.__getattribute__(key), key) for key in obj._meta.fields_map if not key.endswith('_id')}
 
-        objs: [Model] = await model.pageQuery(form['length'], form['start'], order, True)
-        data = [render(obj) for obj in objs]
-        total = len(data)+form['start'] if form['length']-len(data) else await model.all().count()
-        return {'draw': int(form['draw']), 'recordsTotal': total, 'recordsFiltered': total, 'data': data}
+        # objs: [Model] = await model.pageQuery(form['length'], form['start'], order, True)
+        # data = [render(obj) for obj in objs]
+        return {'draw': int(form['draw']), 'recordsTotal': data.total, 'recordsFiltered': data.data, 'data': data}

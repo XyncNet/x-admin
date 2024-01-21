@@ -13,13 +13,13 @@
     </a>
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
         <a
-                href="{{ request.app.admin_path }}/password"
+                href="/password"
                 class="dropdown-item"
         >{{ _('update_password') }}</a
         >
         <div class="dropdown-divider"></div>
         <a
-                href="{{ request.app.admin_path }}{{ request.app.login_provider.logout_path }}"
+                href="{{ request.app.login_provider.logout_path }}"
                 class="dropdown-item"
         >{{ _('logout') }}</a
         >

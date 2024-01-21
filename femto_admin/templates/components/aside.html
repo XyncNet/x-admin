@@ -15,7 +15,7 @@
         </h1>
         <div class="collapse navbar-collapse" id="sidebar-menu">
             <ul class="navbar-nav">
-                {% for key, item in models.items() if not item._hidden %}
+                {% for key, item in models.items() %}
                     <li class="nav-item">
                         <a class="nav-link dropdown-item" href="/{{ key }}">
                           <span class="nav-link-icon d-md-none d-lg-inline-block color">
