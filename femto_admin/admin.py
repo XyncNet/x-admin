@@ -2,12 +2,13 @@ from datetime import datetime
 from enum import StrEnum
 from functools import partial
 from types import ModuleType
-from typing import Annotated, Type, List
+from typing import Annotated, Type, List, _GenericAlias
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Form, Cookie
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from pydantic import BaseModel
+from pydantic.fields import FieldInfo
 from redis.asyncio import Redis
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
@@ -21,7 +22,7 @@ from tortoise_api.api import Api
 from tortoise_api.oauth import get_current_active_user, my, read, reg_user, login_for_access_token, EXPIRES, \
     authenticate_user, AuthFailReason, UserSchema, AuthException
 from tortoise_api_model import Model, User
-from tortoise_api_model.pydantic import UserReg
+from tortoise_api_model.pydantic import UserReg, PydList
 
 import femto_admin
 from femto_admin import auth_dep
@@ -101,7 +102,7 @@ class Admin(Api):
             # include_in_schema=False,
         )
         self.app.get("/login")(self.login_view)
-        self.app.post("/login")(self.login)
+        self.app.post("/login", operation_id='Login', description='Login from Admin Panel')(self.login)
         self.app.get("/reg")(self.init_view)
         self.app.post("/reg")(self.reg)
         self.app.on_event('startup')(self.startup)
@@ -127,9 +128,9 @@ class Admin(Api):
         ar = APIRouter(tags=['admin'], dependencies=[Depends(self.auth_middleware)])
         for name, model in self.models.items():
             pyd_model = pydantic_model_creator(model)
+            ar.add_api_route('/' + name, partial(self.index, ), name=name + ' list')
             ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'], response_model=[]),
             ar.add_api_route(f'/{name}/{"{oid}"}', self.edit, name='Edit view'),
-            ar.add_api_route('/' + name, partial(self.index, ), name=name + ' list')
         self.app.include_router(ar)
 
     async def login_view(
@@ -219,10 +220,12 @@ class Admin(Api):
         model: Type[Model] = self.models[model_name]
         pyd = model.pydListItem()
         fields = {key: {'type': f.annotation, 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
+        cols = [{'data': k} for k in fields]
         return self.templates.TemplateResponse("index.html", {
             'model': pyd,
             'name': model_name,
             'fields': fields,
+            'cols': cols,
             'subtitle': model._meta.table_description or model_name,
             'is_index_page': True,
             'request': request
@@ -253,23 +256,26 @@ class Admin(Api):
         col_names = list(model.field_input_map().keys())
         order = [('-' if ord['dir']=='desc' else '')+(col_name+'__'+meta.fields_map[col_name].related_model._name if (col_name:=col_names[ord['column']]) in meta.fk_fields else col_name) for ord in form['order']]
 
-        def render(obj: Model):
+        def render(obj: PydList):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
 
-            def check(val, key: str):
+            def check(val, key: str, fi: FieldInfo):
                 if key=='id':
                     return rel({'type': model.__name__, 'id': val, 'repr': val})
-                if isinstance(val, Model):
-                    val = {'type': val.__class__.__name__, 'id': val.id, 'repr': val.repr()}
-                    return rel(val)
-                elif isinstance(val, ReverseRelation):
-                    r = [rel({'type': v.__class__.__name__, 'id': v.id, 'repr': v.repr(model)}) for v in val.related_objects]
-                    return ' '.join(r)
+                if key in meta.fetch_fields:
+                    rm = meta.fields_map[key].related_model
+                    if key in meta.fk_fields|meta.o2o_fields:
+                        val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, rm._name)}
+                        return rel(val)
+                    elif key in meta.m2m_fields:
+                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, rm._name)}) for v in val]
+                        return ' '.join(r)
+                    else:
+                        raise Exception('What type is fetch field?')
                 return f'{val[:120]}..' if isinstance(val, str) and len(val) > 120 else val
 
-            return {key: check(obj.__getattribute__(key), key) for key in obj._meta.fields_map if not key.endswith('_id')}
+            return {key: check(obj.__getattribute__(key), key, fi) for key, fi in obj.model_fields.items()}
 
-        # objs: [Model] = await model.pageQuery(form['length'], form['start'], order, True)
-        # data = [render(obj) for obj in objs]
-        return {'draw': int(form['draw']), 'recordsTotal': data.total, 'recordsFiltered': data.data, 'data': data}
+        rows = [render(obj) for obj in data.data]
+        return {'draw': int(form['draw']), 'recordsTotal': data.total, 'recordsFiltered': data.total, 'data': rows}

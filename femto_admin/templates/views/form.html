@@ -3,12 +3,12 @@
     <form>
         {% block modal_content %}
         {% endblock %}
-        {% for key, field in model.field_input_map().items() %}
+        {% for key, field in fields.items() %}
             {% if not field.auto %}
                 <div class="col-lg-12 mb-3">
                     <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
                     {% with key=field.source_field or key, value=bfms[obj.__getattribute__(key).remote_model] if obj and bfms.get(obj.__getattribute__(key).remote_model) else obj and obj[key] %}
-                        {% include "components/inputs/"+field.input+".html" %}
+{#                        {% include "components/inputs/"+field.input+".html" %}#}
                     {% endwith %}
                 </div>
             {% endif %}
