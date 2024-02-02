@@ -266,7 +266,7 @@ class Admin(Api):
                 if key in meta.fetch_fields:
                     rm = meta.fields_map[key].related_model
                     if key in meta.fk_fields|meta.o2o_fields:
-                        val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, rm._name)}
+                        val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, getattr(rm, '_name'), val.id)}
                         return rel(val)
                     elif key in meta.m2m_fields:
                         r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, getattr(rm, '_name'), v.id)}) for v in val]
