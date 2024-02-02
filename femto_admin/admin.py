@@ -235,12 +235,12 @@ class Admin(Api):
         mod_name = request.scope['path'][1:].split('/')[0]
         model: Type[Model] = self.models.get(mod_name)
         oid = request.path_params['oid']
-        await model.load_rel_options()
+        # await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
         bfms = {getattr(obj, k).remote_model: [ros.pk for ros in getattr(obj, k)] for k in model._meta.backward_fk_fields}
-        [await bfm.load_rel_options() for bfm in bfms]
+        # [await bfm.load_rel_options() for bfm in bfms]
         return self.templates.TemplateResponse("edit.html", {
-            'model': model,
+            'model': model.pydIn(),
             'subtitle': model._meta.table_description,
             'request': request,
             'obj': obj,
@@ -269,7 +269,7 @@ class Admin(Api):
                         val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, rm._name)}
                         return rel(val)
                     elif key in meta.m2m_fields:
-                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, rm._name)}) for v in val]
+                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, getattr(rm, '_name'), v.id)}) for v in val]
                         return ' '.join(r)
                     else:
                         raise Exception('What type is fetch field?')

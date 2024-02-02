@@ -3,7 +3,7 @@
     <form>
         {% block modal_content %}
         {% endblock %}
-        {% for key, field in fields.items() %}
+        {% for key, field in model.model_fields.items() %}
             {% if not field.auto %}
                 <div class="col-lg-12 mb-3">
                     <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
