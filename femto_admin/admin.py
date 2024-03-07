@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from functools import partial
 from types import ModuleType
-from typing import Annotated, Type, List, _GenericAlias
+from typing import Annotated, Type, List
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Form, Cookie
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordRequestForm
@@ -17,15 +17,11 @@ from starlette.staticfiles import StaticFiles
 from starlette import status
 from starlette.templating import Jinja2Templates, _TemplateResponse
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.fields import ReverseRelation
 from tortoise_api.api import Api
-from tortoise_api.oauth import get_current_active_user, my, read, reg_user, login_for_access_token, EXPIRES, \
-    authenticate_user, AuthFailReason, UserSchema, AuthException
-from tortoise_api_model import Model, User
+from tortoise_api_model import Model
 from tortoise_api_model.pydantic import UserReg, PydList
 
 import femto_admin
-from femto_admin import auth_dep
 from femto_admin.utils.parse import parse_fs
 
 
@@ -92,7 +88,7 @@ class Admin(Api):
             APIRoute('/', dash_func or self.dash, name="Dashboard"),
             # auth routes:
             # APIRoute('/logout', auth_dep.logout),
-            APIRoute('/password', self.password_view, dependencies=[my]),
+            APIRoute('/password', self.password_view, dependencies=[self.my]),
             # APIRoute('/password', auth_dep.password, methods=['POST'], dependencies=[my]),
         ]
         self.app.include_router(
@@ -129,17 +125,18 @@ class Admin(Api):
         for name, model in self.models.items():
             pyd_model = pydantic_model_creator(model)
             ar.add_api_route('/' + name, partial(self.index, ), name=name + ' list')
-            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'], response_model=[]),
+            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'],
+                             response_model=[]),
             ar.add_api_route(f'/{name}/{"{oid}"}', self.edit, name='Edit view'),
         self.app.include_router(ar)
 
     async def login_view(
             self,
             request: Request,
-            reason: Annotated[str|None, Cookie()] = None,
-            username: Annotated[str|None, Cookie()] = None,
-            password: Annotated[str|None, Cookie()] = None,
-            remember_me: Annotated[str|None, Cookie()] = None
+            reason: Annotated[str | None, Cookie()] = None,
+            username: Annotated[str | None, Cookie()] = None,
+            password: Annotated[str | None, Cookie()] = None,
+            remember_me: Annotated[str | None, Cookie()] = None
     ) -> _TemplateResponse:
         response = self.templates.TemplateResponse("providers/login/login.html", context={
             "request": request,
@@ -158,13 +155,13 @@ class Admin(Api):
     async def init_view(self, request: Request):
         return self.templates.TemplateResponse("init.html", context={"request": request})
 
-    @staticmethod
-    async def login(username: Annotated[str, Form()], password: Annotated[str, Form()], remember_me: Annotated[str, Form()] = ''):
+    async def login(self, username: Annotated[str, Form()], password: Annotated[str, Form()],
+                    remember_me: Annotated[str, Form()] = ''):
         response = RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie('remember_me', remember_me)
         try:
-            user_cred = await authenticate_user(username, password)
-        except AuthException as e:
+            user_cred = await self.oauth.authenticate_user(username, password)
+        except self.oauth.AuthException as e:
             response.set_cookie('reason', e.detail.name)
             response.set_cookie('username', username)
             response.set_cookie('password', password)
@@ -172,14 +169,14 @@ class Admin(Api):
         if user_cred:
             # todo get permissions (scopes) from user.role in `scope`:str (separated by spaces)
             scopes = ["my", "read"]
-            jwt = await login_for_access_token(
+            jwt = await self.oauth.login_for_access_token(
                 OAuth2PasswordRequestForm(username=username, password=password, scope=' '.join(scopes)))
             response.url = '/'
             response.headers['location'] = '/'
             response.set_cookie(
                 'token',
                 jwt.access_token,
-                expires=EXPIRES,
+                expires=self.oauth.EXPIRES,
                 path='/',
                 httponly=True,
             )
@@ -187,20 +184,19 @@ class Admin(Api):
             return response
         return RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
 
-    @staticmethod
-    async def reg(request: Request):
+    async def reg(self, request: Request):
         obj = await request.form()
-        if user := await reg_user(UserReg.model_validate(obj)):
+        if user := await self.oauth.reg_user(UserReg.model_validate(obj)):
             # todo get permissions (scopes) from user.role in `scope`:str (separated by spaces)
             scopes = ["my", "read"]
-            jwt = await login_for_access_token(
+            jwt = await self.oauth.login_for_access_token(
                 OAuth2PasswordRequestForm(username=user.username, password=obj['password'], scope=' '.join(scopes))
             )
             response = RedirectResponse(url='/', status_code=status.HTTP_303_SEE_OTHER)
             response.set_cookie(
                 'token',
                 jwt['access_token'],
-                expires=EXPIRES,
+                expires=self.oauth.EXPIRES,
                 path='/',
                 httponly=True,
             )
@@ -219,7 +215,8 @@ class Admin(Api):
         model_name: str = request.scope['path'][1:]
         model: Type[Model] = self.models[model_name]
         pyd = model.pydListItem()
-        fields = {key: {'type': f.annotation, 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
+        fields = {key: {'type': f.annotation, 'name': f.title, 'validators': f.metadata} for key, f in
+                  pyd.model_fields.items()}
         cols = [{'data': k} for k in fields]
         return self.templates.TemplateResponse("index.html", {
             'model': pyd,
@@ -237,7 +234,8 @@ class Admin(Api):
         oid = request.path_params['oid']
         # await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
-        bfms = {getattr(obj, k).remote_model: [ros.pk for ros in getattr(obj, k)] for k in model._meta.backward_fk_fields}
+        bfms = {getattr(obj, k).remote_model: [ros.pk for ros in getattr(obj, k)] for k in
+                model._meta.backward_fk_fields}
         # [await bfm.load_rel_options() for bfm in bfms]
         return self.templates.TemplateResponse("edit.html", {
             'model': model.pydIn(),
@@ -247,29 +245,32 @@ class Admin(Api):
             'bfms': bfms,
         })
 
-    async def dt(self, request: Request): # length: int = 100, start: int = 0
+    async def dt(self, request: Request):  # length: int = 100, start: int = 0
         model: Type[Model] = self.models.get(request.scope['path'][4:])
         meta = model._meta
         form = await request.body()
         form = parse_fs(form.decode())
-        data = await model.pagePyd(form['length'], form['start'])
         col_names = list(model.field_input_map().keys())
-        order = [('-' if ord['dir']=='desc' else '')+(col_name+'__'+meta.fields_map[col_name].related_model._name if (col_name:=col_names[ord['column']]) in meta.fk_fields else col_name) for ord in form['order']]
+        sorts = [('-' if srt['dir'] == 'desc' else '') + (
+            f'{col_name}__{meta.fields_map[col_name].related_model._name}' if (col_name := col_names[srt['column']]) in meta.fk_fields else col_name
+        ) for srt in form['order']]
+        data = await model.pagePyd(sorts, form['length'], form['start'])
 
         def render(obj: PydList):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
 
             def check(val, key: str, fi: FieldInfo):
-                if key=='id':
+                if key == 'id':
                     return rel({'type': model.__name__, 'id': val, 'repr': val})
                 if key in meta.fetch_fields:
                     rm = meta.fields_map[key].related_model
-                    if key in meta.fk_fields|meta.o2o_fields:
+                    if key in meta.fk_fields | meta.o2o_fields:
                         val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, getattr(rm, '_name'), val.id)}
                         return rel(val)
                     elif key in meta.m2m_fields:
-                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, getattr(rm, '_name'), v.id)}) for v in val]
+                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, getattr(rm, '_name'), v.id)}) for
+                             v in val]
                         return ' '.join(r)
                     else:
                         raise Exception('What type is fetch field?')
