@@ -1,20 +1,20 @@
-{% macro form(model, bfms) -%}
+{% macro form(model, bfms, name) -%}
 <div class="row mb-3">
     <form>
         {% block modal_content %}
         {% endblock %}
-        {% for key, field in model.model_fields.items() %}
+        {% for key, field in fields.items() %}
             {% if not field.auto %}
                 <div class="col-lg-12 mb-3">
                     <label class="form-label">{{ key.replace('_', ' ').title() }}</label>
                     {% with key=field.source_field or key, value=bfms[obj.__getattribute__(key).remote_model] if obj and bfms.get(obj.__getattribute__(key).remote_model) else obj and obj[key] %}
-{#                        {% include "components/inputs/"+field.input+".html" %}#}
+                        {% include "components/inputs/"+field.input+".html" %}
                     {% endwith %}
                 </div>
             {% endif %}
         {% endfor %}
         <button class="btn btn-primary ms-auto" {{ '' if obj else 'data-bs-dismiss=modal' }} type="submit">
-            {{ 'Edit' if obj else 'New' }} {{ model.__name__ }}
+            {{ 'Edit' if obj else 'New' }} {{ name }}
         </button>
         {% if obj %}
         <button class="btn btn-danger ms-auto" {{ '' if obj else 'data-bs-dismiss=modal' }} type="button" onclick="del()">
@@ -29,27 +29,31 @@
 document.getElementsByTagName('form')[0].onsubmit = async e => {
     e.preventDefault()
     const data = Object.fromEntries(new FormData(e.target))
-    await fetch("/v2/{{ model.__name__ }}{{ obj and '/'+(obj.pk | string) }}", {
-        method: 'POST',
+    await fetch("/v2/{{ name }}{{ obj and '/'+(obj.pk | string) }}", {
+        method: "{{ 'PATCH' if obj else 'PUT' }}",
         headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer {{ request.cookies["token"] }}'
         },
         body: JSON.stringify(data)
     })
     {% if obj %}
-    window.location = '/{{ model.__name__ }}'
+    window.location = '/{{ name }}'
     {% else %}
-    $('#dt-{{ model.__name__ }}').DataTable().ajax.reload()
+    $('#dt-{{ name }}').DataTable().ajax.reload()
     {% endif %}
 }
 {# delete button #}
 {% if obj %}
 const del = async e => {
-    await fetch("/v2/{{ model.__name__ }}/{{ obj.pk | string }}", {
+    await fetch("/v2/{{ name }}/{{ obj.pk | string }}", {
         method: 'DELETE',
+        headers: {
+            'Authorization': 'Bearer {{ request.cookies["token"] }}'
+        },
     })
-    window.location = '/{{ model.__name__ }}'
+    window.location = '/{{ name }}'
 }
 {% endif %}
 

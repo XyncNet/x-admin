@@ -3,8 +3,8 @@
     <table id="dt-{{ name }}" class="table table-striped" style="width:100%">
         <thead>
         <tr>
-            {% for field in fields %}
-                <th>{{ field }}</th>
+            {% for col in cols %}
+                <th>{{ col['data'] }}</th>
             {% endfor %}
         </tr>
         </thead>

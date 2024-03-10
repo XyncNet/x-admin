@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from enum import StrEnum
 from functools import partial
 from types import ModuleType
@@ -22,6 +22,7 @@ from tortoise_api_model import Model
 from tortoise_api_model.pydantic import UserReg, PydList
 
 import femto_admin
+from femto_admin.utils.fmap import ffrom_pyd
 from femto_admin.utils.parse import parse_fs
 
 
@@ -77,7 +78,7 @@ class Admin(Api):
 
         templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
         templates.env.globals["title"] = title
-        templates.env.globals["meta"] = {'year': datetime.now().year, 'ver': femto_admin.__version__}
+        templates.env.globals["meta"] = {'year': datetime.datetime.now().year, 'ver': femto_admin.__version__}
         templates.env.globals["minify"] = '' if debug else 'min.'
         templates.env.globals["models"] = self.models
         self.templates = templates
@@ -87,7 +88,7 @@ class Admin(Api):
         routes: [Route] = [
             APIRoute('/', dash_func or self.dash, name="Dashboard"),
             # auth routes:
-            # APIRoute('/logout', auth_dep.logout),
+            APIRoute('/logout', self.logout),
             APIRoute('/password', self.password_view, dependencies=[self.my]),
             # APIRoute('/password', auth_dep.password, methods=['POST'], dependencies=[my]),
         ]
@@ -184,6 +185,13 @@ class Admin(Api):
             return response
         return RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
 
+    @staticmethod
+    async def logout():
+        response = RedirectResponse(url='/', status_code=status.HTTP_303_SEE_OTHER)
+        response.delete_cookie('token', path='/')
+        # await self.redis.delete(constants.LOGIN_USER.format(token=token))
+        return response
+
     async def reg(self, request: Request):
         obj = await request.form()
         if user := await self.oauth.reg_user(UserReg.model_validate(obj)):
@@ -214,14 +222,13 @@ class Admin(Api):
     async def index(self, request: Request):
         model_name: str = request.scope['path'][1:]
         model: Type[Model] = self.models[model_name]
-        pyd = model.pydListItem()
-        fields = {key: {'type': f.annotation, 'name': f.title, 'validators': f.metadata} for key, f in
-                  pyd.model_fields.items()}
-        cols = [{'data': k} for k in fields]
+        pyd = model.pydIn()
+        ff = ffrom_pyd(pyd)
+        cols = [{'data': k} for k in model.pydListItem().model_fields]
         return self.templates.TemplateResponse("index.html", {
             'model': pyd,
             'name': model_name,
-            'fields': fields,
+            'fields': ff,
             'cols': cols,
             'subtitle': model._meta.table_description or model_name,
             'is_index_page': True,
@@ -231,14 +238,17 @@ class Admin(Api):
     async def edit(self, request: Request):
         mod_name = request.scope['path'][1:].split('/')[0]
         model: Type[Model] = self.models.get(mod_name)
+        pyd = model.pydIn()
+        ff = ffrom_pyd(pyd)
         oid = request.path_params['oid']
         # await model.load_rel_options()
         obj: Model = await model.get(id=oid).prefetch_related(*model._meta.fetch_fields)
-        bfms = {getattr(obj, k).remote_model: [ros.pk for ros in getattr(obj, k)] for k in
-                model._meta.backward_fk_fields}
+        bfms = {getattr(obj, k).remote_model: [ros.pk for ros in getattr(obj, k)] for k in model._meta.backward_fk_fields}
         # [await bfm.load_rel_options() for bfm in bfms]
         return self.templates.TemplateResponse("edit.html", {
-            'model': model.pydIn(),
+            'model': pyd,
+            'name': mod_name,
+            'fields': ff,
             'subtitle': model._meta.table_description,
             'request': request,
             'obj': obj,

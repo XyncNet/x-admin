@@ -1,13 +1,13 @@
 {% from "views/form.html" import form with context %}
-<div class="modal modal-blur fade" id="modal-{{ model.__name__ }}" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal modal-blur fade" id="modal-{{ name }}" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{ (model and model.__name__) or title }}</h5>
+                <h5 class="modal-title">{{ (model and name) or title }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                {{ form(modal_model or model, {}) }}
+                {{ form(modal_model or model, {}, name) }}
             </div>
             <div class="modal-footer">
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">

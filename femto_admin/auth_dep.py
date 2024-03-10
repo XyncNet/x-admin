@@ -58,12 +58,7 @@ async def login(request: Request, redis: redis.Redis = Depends(get_redis)):
     return response
 
 
-# async def logout(request: Request):
-#     response = redirect_login(request)
-#     response.delete_cookie(self.access_token, path='/admin')
-#     token = request.cookies.get(self.access_token)
-#     await request.app.redis.delete(constants.LOGIN_USER.format(token=token))
-#     return response
+
 
 
 # async def authenticate(

@@ -5,6 +5,7 @@ from tortoise_api_model.model import User as ApiUser, TsModel
 class User(ApiUser):
     posts: fields.ReverseRelation["Post"]
 
+
 class Post(TsModel):
     id: int = fields.IntField(pk=True)
     text: str = fields.CharField(4095)

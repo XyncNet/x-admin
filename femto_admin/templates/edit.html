@@ -4,7 +4,7 @@
 {% from "views/form.html" import form with context %}
 
 {% block body %}
-    {{ form(model=model, bfms=bfms) }}
+    {{ form(model=model, bfms=bfms, name=name) }}
 {#    {% for bfm in bfms %}#}
 {#        {% with modal_model=bfm %}#}
 {#            {% include "components/modal.html" %}#}
