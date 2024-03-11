@@ -33,15 +33,15 @@ type2inputs: {type: dict} = {
 
 
 def ffrom_pyd(pyd: type[PydanticModel]) -> dict:
-    ff = {}
-    for key, f in pyd.model_fields.items():
-        req = True
-        if not (inp := type2inputs.get(typ := f.annotation)):
-            if isinstance(typ, UnionType) or typ._name == 'Optional':
-                typ, req = get_args(f.annotation)
-                if not (inp := type2inputs.get(typ)):
-                    if issubclass(typ, IntEnum):
-                        inp = type2inputs[IntEnum]
-                        inp.update({'options': {t.value: t.name for t in typ}})
-        ff[key] = {**inp, 'req': bool(req), 'name': f.title, 'validators': f.metadata}
-    return ff
+    def typ2inp(typ, req: bool = True) -> dict:
+        if not (inp := type2inputs.get(typ)):
+            if isinstance(typ, UnionType) or (hasattr(typ, '_name') and typ._name == 'Optional'):
+                typ, req = get_args(typ)
+            if not (inp := type2inputs.get(typ)):
+                if issubclass(typ, IntEnum):
+                    inp = type2inputs[IntEnum]
+                    inp.update({'options': {t.value: t.name for t in typ}})
+        inp.update({'req': bool(req)})
+        return inp
+
+    return {key: {**typ2inp(f.annotation), 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
