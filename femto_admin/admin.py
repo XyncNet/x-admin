@@ -16,7 +16,7 @@ from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from starlette import status
 from starlette.templating import Jinja2Templates, _TemplateResponse
-from tortoise.contrib.pydantic import pydantic_model_creator
+from starlette.types import Lifespan
 from tortoise_api.api import Api
 from tortoise_api_model import Model
 from tortoise_api_model.pydantic import UserReg, PydList
@@ -47,6 +47,7 @@ class Dtp(BaseModel):
 
 class Admin(Api):
     app: FastAPI
+    templates: Jinja2Templates
 
     def __init__(
             self,
@@ -55,7 +56,8 @@ class Admin(Api):
             title: str = "Admin",
             static_dir: str = None,
             logo: str | bool = None,
-            exc_models: [str] = [],
+            exc_models: {str} = None,
+            lifespan: Lifespan = None
     ):
         """
         Parameters:
@@ -63,27 +65,20 @@ class Admin(Api):
             # auth_provider: Authentication Provider
         """
         # Api init
-        super().__init__(models_module, debug, title, exc_models)
-        # Authenticable model (maybe overriden)
-        user_model = self.models['User']
+        super().__init__(models_module, debug, title, exc_models, lifespan)
 
+        self.set_templates()
+
+    def set_templates(self):
         templates = Jinja2Templates("templates")
-
-        if static_dir:
-            self.app.mount('/' + static_dir, StaticFiles(directory=static_dir), name='my-public'),
-            if logo is not None:
-                templates.env.globals["logo"] = logo
-        favicon_path = f'./{static_dir or "statics/placeholders"}/favicon.ico'
-        self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
-
         templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
-        templates.env.globals["title"] = title
+        templates.env.globals["title"] = self.title
         templates.env.globals["meta"] = {'year': datetime.datetime.now().year, 'ver': femto_admin.__version__}
-        templates.env.globals["minify"] = '' if debug else 'min.'
+        templates.env.globals["minify"] = '' if self.debug else 'min.'
         templates.env.globals["models"] = self.models
         self.templates = templates
 
-    def get_app(self, dash_func: callable = None):
+    def mount(self, dash_func: callable = None):
         self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
         routes: [Route] = [
             APIRoute('/', dash_func or self.dash, name="Dashboard"),
@@ -103,7 +98,8 @@ class Admin(Api):
         self.app.get("/reg")(self.init_view)
         self.app.post("/reg")(self.reg)
         self.app.on_event('startup')(self.startup)
-        self.set_routes()
+        super().gen_routes()
+        self.gen_routes()
         return self.app
 
     async def startup(self):
@@ -121,13 +117,11 @@ class Admin(Api):
             )
         # return RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
 
-    def set_routes(self):
+    def gen_routes(self):
         ar = APIRouter(tags=['admin'], dependencies=[Depends(self.auth_middleware)])
         for name, model in self.models.items():
-            pyd_model = pydantic_model_creator(model)
             ar.add_api_route('/' + name, partial(self.index, ), name=name + ' list')
-            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'],
-                             response_model=[]),
+            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'], response_model=[]),
             ar.add_api_route(f'/{name}/{"{oid}"}', self.edit, name='Edit view'),
         self.app.include_router(ar)
 

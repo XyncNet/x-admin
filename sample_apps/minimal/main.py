@@ -1,4 +1,6 @@
 from femto_admin import Admin
 import models
 
-app = Admin(models, True).get_app()
+adm = Admin(models, True)
+app = adm.mount()
+pass
