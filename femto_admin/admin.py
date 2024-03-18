@@ -54,8 +54,6 @@ class Admin(Api):
             models_module: ModuleType,
             debug: bool = False,
             title: str = "Admin",
-            static_dir: str = None,
-            logo: str | bool = None,
             exc_models: {str} = None,
             lifespan: Lifespan = None
     ):
@@ -78,8 +76,16 @@ class Admin(Api):
         templates.env.globals["models"] = self.models
         self.templates = templates
 
-    def mount(self, dash_func: callable = None):
+    def mount(self, static_dir: str = None, logo: str | bool = None, dash_func: callable = None):
         self.app.mount('/statics', StaticFiles(packages=["femto_admin"]), name='public'),
+        if static_dir:
+            assert static_dir != 'statics', 'Use any name for statics dir, but not `statics`'
+            self.app.mount('/' + static_dir, StaticFiles(directory=static_dir), name='my-public'),
+            if logo is not None:
+                self.templates.env.globals["logo"] = logo
+        favicon_path = f'./{static_dir or "statics/placeholders"}/favicon.ico'
+        self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
+
         routes: [Route] = [
             APIRoute('/', dash_func or self.dash, name="Dashboard"),
             # auth routes:
