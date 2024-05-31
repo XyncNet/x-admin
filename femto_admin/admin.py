@@ -85,7 +85,7 @@ class Admin(Api):
             if logo is not None:
                 self.templates.env.globals["logo"] = logo
         favicon_path = f'./{static_dir or "statics/placeholders"}/favicon.ico'
-        self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301))
+        self.app.add_route('/favicon.ico', lambda r: RedirectResponse(favicon_path, status_code=301), include_in_schema=False)
 
         routes: [Route] = [
             APIRoute('/', dash_func or self.dash, name="Dashboard"),
@@ -98,12 +98,12 @@ class Admin(Api):
             APIRouter(routes=routes),
             tags=['admin'],
             dependencies=[Depends(self.auth_middleware)],
-            # include_in_schema=False,
+            include_in_schema=False,
         )
-        self.app.get("/login")(self.login_view)
-        self.app.post("/login", operation_id='Login', description='Login from Admin Panel')(self.login)
-        self.app.get("/reg")(self.init_view)
-        self.app.post("/reg")(self.reg)
+        self.app.get("/login", include_in_schema=False)(self.login_view)
+        self.app.post("/login", include_in_schema=False)(self.login)
+        self.app.get("/reg", include_in_schema=False)(self.init_view)
+        self.app.post("/reg", include_in_schema=False)(self.reg)
         # self.app.on_event('startup')(self.startup)
         super().gen_routes()
         self.gen_routes()
@@ -126,12 +126,12 @@ class Admin(Api):
         # return RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
 
     def gen_routes(self):
-        ar = APIRouter(tags=['admin'], dependencies=[Depends(self.auth_middleware)])
+        ar = APIRouter(dependencies=[Depends(self.auth_middleware)])
         for name, model in self.models.items():
             ar.add_api_route('/' + name, partial(self.index, ), name=name + ' list')
-            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', tags=['api'], methods=['POST'], response_model=[]),
+            ar.add_api_route('/dt/' + name, self.dt, name=name + ' datatables format', methods=['POST'], response_model=[]),
             ar.add_api_route(f'/{name}/{"{oid}"}', self.edit, name='Edit view'),
-        self.app.include_router(ar)
+        self.app.include_router(ar, include_in_schema=False)
 
     async def login_view(
             self,
