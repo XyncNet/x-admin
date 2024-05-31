@@ -1,6 +1,6 @@
 import datetime
 from enum import IntEnum
-from types import UnionType
+from types import UnionType, GenericAlias
 from typing import get_args
 
 from tortoise.contrib.pydantic import PydanticModel
@@ -41,6 +41,10 @@ def ffrom_pyd(pyd: type[PydanticModel]) -> dict:
                 if issubclass(typ, IntEnum):
                     inp = type2inputs[IntEnum]
                     inp.update({'options': {t.value: t.name for t in typ}})
+                elif type(typ) is GenericAlias:
+                    inp = type2inputs.get(typ.__origin__)
+                    if typ.__origin__ == list:
+                        inp.update({'options': {}})  # todo fill options for multiple
         inp.update({'req': bool(req)})
         return inp
 

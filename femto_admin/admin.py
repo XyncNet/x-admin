@@ -48,6 +48,7 @@ class Dtp(BaseModel):
 class Admin(Api):
     app: FastAPI
     templates: Jinja2Templates
+    debug: bool = False
 
     def __init__(
             self,
@@ -103,17 +104,18 @@ class Admin(Api):
         self.app.post("/login", operation_id='Login', description='Login from Admin Panel')(self.login)
         self.app.get("/reg")(self.init_view)
         self.app.post("/reg")(self.reg)
-        self.app.on_event('startup')(self.startup)
+        # self.app.on_event('startup')(self.startup)
         super().gen_routes()
         self.gen_routes()
         return self.app
 
-    async def startup(self):
-        self.app.redis = await Redis()
+    # async def startup(self):
+        # self.app.redis = await Redis()
 
     @staticmethod
     async def auth_middleware(request: Request):
         path: str = request.scope["path"]
+        request.app.redis = await Redis()
         redis: Redis = request.app.redis
         if not (token := request.cookies.get('token')):
             raise HTTPException(
@@ -156,14 +158,13 @@ class Admin(Api):
     async def init_view(self, request: Request):
         return self.templates.TemplateResponse("init.html", context={"request": request})
 
-    async def login(self, username: Annotated[str, Form()], password: Annotated[str, Form()],
-                    remember_me: Annotated[str, Form()] = ''):
+    async def login(self, username: Annotated[str, Form()], password: Annotated[str, Form()], remember_me: Annotated[str, Form()] = ''):
         response = RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie('remember_me', remember_me)
         try:
             user_cred = await self.oauth.authenticate_user(username, password)
         except self.oauth.AuthException as e:
-            response.set_cookie('reason', e.detail.name)
+            response.set_cookie('reason', e.detail)
             response.set_cookie('username', username)
             response.set_cookie('password', password)
             return response
@@ -271,14 +272,16 @@ class Admin(Api):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
 
             def check(val, key: str, fi: FieldInfo):
+                if val is None:
+                    return val
                 if key == 'id':
                     return rel({'type': model.__name__, 'id': val, 'repr': val})
                 if key in meta.fetch_fields:
                     rm = meta.fields_map[key].related_model
-                    if key in meta.fk_fields | meta.o2o_fields:
+                    if key in meta.fk_fields | meta.o2o_fields | meta.backward_o2o_fields:
                         val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, getattr(rm, '_name'), val.id)}
                         return rel(val)
-                    elif key in meta.m2m_fields:
+                    elif key in meta.m2m_fields | meta.backward_fk_fields:
                         r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, getattr(rm, '_name'), v.id)}) for
                              v in val]
                         return ' '.join(r)
