@@ -30,7 +30,7 @@ document.getElementsByTagName('form')[0].onsubmit = async e => {
     e.preventDefault()
     var fd = new FormData(e.target)
     const data = Object.fromEntries(fd)
-    fd.keys().forEach(k => {if (!fd.get(k)) delete data[k]})
+    fd.keys().forEach(k => {if (!fd.get(k)) {delete data[k]} else if (e.target[k].dataset.type=='json') {data[k] = JSON.parse(data[k].replace(/'/g, '"'))} })
     await fetch("/v2/{{ name }}{{ obj and '/'+(obj.pk | string) }}", {
         method: "{{ 'PATCH' if obj else 'PUT' }}",
         headers: {

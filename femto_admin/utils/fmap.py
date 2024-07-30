@@ -13,6 +13,7 @@ class FieldType(IntEnum):
     textarea = 4
     collection = 5
     list = 6
+    json = 7
 
 
 type2inputs: {type: dict} = {
@@ -28,6 +29,7 @@ type2inputs: {type: dict} = {
     IntEnum: {'input': FieldType.select.name},
     # ForeignKeyFieldInstance: {'input': FieldType.select.name},
     list: {'input': FieldType.select.name, 'multiple': True},
+    dict: {'input': FieldType.json.name},
     set: {'input': FieldType.select.name, 'multiple': True},
 }
 

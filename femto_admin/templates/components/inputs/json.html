@@ -1,0 +1,40 @@
+<script src="https://cdn.jsdelivr.net/npm/jsoneditor@9.4.0/dist/jsoneditor.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsoneditor@9.4.0/dist/jsoneditor.min.css">
+<div class="form-label">{{ label }}</div>
+<div id="{{ key }}" class="form-group mb-3"></div>
+{% if help_text %}
+    <small class="form-hint">
+        {{ help_text }}
+    </small>
+{% endif %}
+<input {% if not null %}required{% endif %} type="text" data-type="json" name="{{ key }}" value='{{ value }}' hidden>
+<style>
+    .jsoneditor {
+        border: 1px solid #dadcde;
+        border-radius: 4px;
+
+    }
+
+    .jsoneditor-menu {
+        background-color: rgba(35, 46, 60, .7);
+        border-bottom: #dadcde;
+    }
+
+</style>
+<script>
+    const container_{{ key }} = document.getElementById("{{key}}")
+    let options_{{ key }} = {{options|safe or {}}};
+    if (Object.keys(options_{{ key }}).length === 0) {
+        options_{{ key }} = {
+            modes: ['tree', 'view', 'form', 'code', 'text', 'preview'],
+        }
+    }
+    options_{{ key }}.onChangeText = function (json) {
+        $('input[name={{ key }}]').val(json);
+    }
+    const editor_{{ key }} = new JSONEditor(container_{{ key }}, options_{{ key }})
+    {% if value %}
+        editor_{{ key }}.set({{ value|safe }})
+    {% endif %}
+    editor_{{ key }}.expandAll();
+</script>
