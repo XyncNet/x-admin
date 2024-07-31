@@ -172,7 +172,7 @@ class Admin(Api):
             # todo get permissions (scopes) from user.role in `scope`:str (separated by spaces)
             scopes = ["my", "read"]
             jwt = await self.oauth.login_for_access_token(
-                OAuth2PasswordRequestForm(username=username, password=password, scope=' '.join(scopes)))
+                OAuth2PasswordRequestForm(username=username, password=password, scope=' '.join(user_cred[0].scopes)))
             response.url = '/'
             response.headers['location'] = '/'
             response.set_cookie(
@@ -265,7 +265,7 @@ class Admin(Api):
         sorts = [('-' if srt['dir'] == 'desc' else '') + (
             f'{col_name}__{meta.fields_map[col_name].related_model._name}' if (col_name := col_names[srt['column']]) in meta.fk_fields else col_name
         ) for srt in form['order']]
-        data = await model.pagePyd(sorts, form['length'], form['start'])
+        data = await model.pagePyd(sorts, form['length'], form['start'], form['search'].get('value'))
 
         def render(obj: PydList):
             def rel(val: dict):
@@ -292,4 +292,4 @@ class Admin(Api):
             return {key: check(obj.__getattribute__(key), key, fi) for key, fi in obj.model_fields.items()}
 
         rows = [render(obj) for obj in data.data]
-        return {'draw': int(form['draw']), 'recordsTotal': data.total, 'recordsFiltered': data.total, 'data': rows}
+        return {'draw': int(form['draw']), 'recordsTotal': data.total, 'recordsFiltered': data.filtered, 'data': rows}
