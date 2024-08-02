@@ -1,11 +1,12 @@
 <div class="form-group mb-3">
     <div class="form-label">{{ label }}</div>
     <label class="form-check form-switch">
-        <input name="{{ key }}" class="form-check-input" type="checkbox" {% if value %}
+        <input id="{{ key }}" name="{{ key }}" class="form-check-input" type="checkbox" value=true {% if value %}
                checked
-        {% endif %} {% if disabled %}
+        {% endif %}{% if disabled %}
                disabled
-        {% endif %} >
+        {% endif %} onchange="document.getElementById('{{ key }}Hidden').disabled = !this.nextElementSibling.disabled">
+        <input id='{{ key }}Hidden' type='hidden' value='false' name="{{ key }}" {% if value %}disabled{% endif %}>
         {% if help_text %}
             <small class="form-hint">
                 {{ help_text }}
