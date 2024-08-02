@@ -10,6 +10,22 @@
         <small class="form-hint">{{ help_text }}</small>
     </div>
 {% endif %}
+<script src="/statics/vendor/cookie.min.js"></script>
 <script>
-    $('select#{{ 'form-select-'+key }}').select2({minimumResultsForSearch: 20})
+    let conf = {minimumResultsForSearch: 25, width: '100%'}
+    if ("{{ field.source_field}}") {
+        conf['ajax'] = {
+            url: '/v2/{{ field.source_field}}',
+            dataType: 'json',
+            headers: {"Authorization" : 'Bearer '+Cookies.get('token'), "content-type": "application/json"},
+            data: function (params) {
+              var query = {
+                q: params.term,
+                page: params.page || 1
+              }
+              return query;
+            }
+        }
+    }
+    $('select#{{ 'form-select-'+key }}').select2(conf)
 </script>

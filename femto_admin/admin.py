@@ -180,7 +180,7 @@ class Admin(Api):
                 jwt.access_token,
                 expires=self.oauth.EXPIRES,
                 path='/',
-                httponly=True,
+                # httponly=True,
             )
             # await redis.set(constants.LOGIN_USER.format(token=token), admin.pk, ex=expire)
             return response

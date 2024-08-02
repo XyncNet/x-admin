@@ -35,8 +35,10 @@ type2inputs: {type: dict} = {
 
 
 def ffrom_pyd(pyd: type[PydanticModel]) -> dict:
-    def typ2inp(typ, req: bool = True) -> dict:
-        if not (inp := type2inputs.get(typ)):
+    def typ2inp(typ, key: str = None, req: bool = True) -> dict:
+        if key.endswith('_id') and typ is int:
+            inp = {'input': FieldType.select.name, 'options': {}, 'source_field': key.replace('_id', '').capitalize()}
+        elif not (inp := type2inputs.get(typ)):
             if isinstance(typ, UnionType) or (hasattr(typ, '_name') and typ._name == 'Optional'):
                 typ, req = get_args(typ)
             if not (inp := type2inputs.get(typ)):
@@ -50,4 +52,4 @@ def ffrom_pyd(pyd: type[PydanticModel]) -> dict:
         inp.update({'req': bool(req)})
         return inp
 
-    return {key: {**typ2inp(f.annotation), 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
+    return {key: {**typ2inp(f.annotation, key), 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
