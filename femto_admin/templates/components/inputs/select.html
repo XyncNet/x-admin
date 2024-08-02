@@ -4,6 +4,9 @@
             {{ name }}
         </option>
     {% endfor %}
+    {% if not field.options.items() and value %}
+        <option value="{{ value }}" selected>{{ value }}</option>
+    {% endif %}
 </select>
 {% if help_text %}
     <div class="mt-2">
