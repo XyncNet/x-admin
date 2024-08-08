@@ -11,4 +11,4 @@ class Post(TsModel):
     text: str = fields.CharField(4095)
     published: bool = fields.BooleanField()
     user: fields.ForeignKeyRelation[User] = fields.ForeignKeyField('models.User', related_name='posts')
-    _name = 'text'
+    _name = {'text'}

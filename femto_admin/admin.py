@@ -18,6 +18,7 @@ from starlette import status
 from starlette.templating import Jinja2Templates, _TemplateResponse
 from starlette.types import Lifespan
 from tortoise_api.api import Api
+from tortoise_api.loader import _repr
 from tortoise_api_model import Model
 from tortoise_api_model.pydantic import UserReg, PydList
 
@@ -271,7 +272,7 @@ class Admin(Api):
             def rel(val: dict):
                 return f'<a class="m-1 py-1 px-2 badge bg-blue-lt lead" href="/{val["type"]}/{val["id"]}">{val["repr"]}</a>'
 
-            def check(val, key: str, fi: FieldInfo):
+            def check(val: list[BaseModel], key: str, fi: FieldInfo):
                 if val is None:
                     return val
                 if key == 'id':
@@ -279,11 +280,10 @@ class Admin(Api):
                 if key in meta.fetch_fields:
                     rm = meta.fields_map[key].related_model
                     if key in meta.fk_fields | meta.o2o_fields | meta.backward_o2o_fields:
-                        val = {'type': rm.__name__, 'id': val.id, 'repr': getattr(val, getattr(rm, '_name'), val.id)}
+                        val = {'type': rm.__name__, 'id': val.id, 'repr': _repr(val.model_dump(mode='json'), getattr(rm, '_name'))}
                         return rel(val)
                     elif key in meta.m2m_fields | meta.backward_fk_fields:
-                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': getattr(v, getattr(rm, '_name'), v.id)}) for
-                             v in val]
+                        r = [rel({'type': rm.__name__, 'id': v.id, 'repr': _repr(v.model_dump(mode='json'), getattr(rm, '_name'))}) for v in val]
                         return ' '.join(r)
                     else:
                         raise Exception('What type is fetch field?')
