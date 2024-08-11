@@ -3,6 +3,8 @@ from enum import IntEnum
 from types import UnionType, GenericAlias
 from typing import get_args
 
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
 from tortoise.contrib.pydantic import PydanticModel
 
 
@@ -35,7 +37,8 @@ type2inputs: {type: dict} = {
 
 
 def ffrom_pyd(pyd: type[PydanticModel]) -> dict:
-    def typ2inp(typ, key: str = None, req: bool = True) -> dict:
+    def typ2inp(field: FieldInfo, key: str = None, req: bool = True) -> dict:
+        typ = field.annotation
         if key.endswith('_id') and typ is int:
             inp = {'input': FieldType.select.name, 'options': {}, 'source_field': key.replace('_id', '').capitalize()}
         elif not (inp := type2inputs.get(typ)):
@@ -48,8 +51,8 @@ def ffrom_pyd(pyd: type[PydanticModel]) -> dict:
                 elif type(typ) is GenericAlias:
                     inp = type2inputs.get(typ.__origin__)
                     if typ.__origin__ == list:
-                        inp.update({'options': {}})  # todo fill options for multiple
-        inp.update({'req': bool(req)})
+                        inp.update({'source_field': key.capitalize()[:-1], 'options': {}})
+        inp.update({'req': bool(req), 'default': field.default if field.default is not PydanticUndefined else None})
         return inp
 
-    return {key: {**typ2inp(f.annotation, key), 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}
+    return {key: {**typ2inp(f, key), 'name': f.title, 'validators': f.metadata} for key, f in pyd.model_fields.items()}

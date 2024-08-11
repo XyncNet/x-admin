@@ -254,7 +254,7 @@ class Admin(Api):
             'subtitle': model._meta.table_description,
             'request': request,
             'obj': obj,
-            'bfms': bfms,
+            'bfms': bfms,  # todo: remove
         })
 
     async def dt(self, request: Request):  # length: int = 100, start: int = 0

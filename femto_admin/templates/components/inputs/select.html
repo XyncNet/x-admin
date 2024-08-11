@@ -4,9 +4,6 @@
             {{ name }}
         </option>
     {% endfor %}
-    {% if not field.options.items() and value %}
-        <option value="{{ value }}" selected>{{ value }}</option>
-    {% endif %}
 </select>
 {% if help_text %}
     <div class="mt-2">
@@ -15,7 +12,8 @@
 {% endif %}
 <script src="/statics/vendor/cookie.min.js"></script>
 <script>
-    let conf = {minimumResultsForSearch: 25, width: '100%'}
+    var $select{{key}} = $('select#form-select-{{key}}')
+    var conf = {minimumResultsForSearch: 25, width: '100%'}
     if ("{{ field.source_field}}") {
         conf['ajax'] = {
             url: '/v2/{{ field.source_field}}',
@@ -27,8 +25,28 @@
                 page: params.page || 1
               }
               return query;
-            }
+            },
+            cache: true
         }
     }
-    $('select#{{ 'form-select-'+key }}').select2(conf)
+    if ("{{ field.multiple}}") {
+        conf['ajax']['processResults'] = function (data, params) {
+          if (!$select{{key}}.select2('data').length) {
+           $.each(data.results, function(index, value) {
+            if (value.selected) {
+                if ($select{{key}}.find("option[value='" + value.id + "']").length) {
+                    $select{{key}}.val(value.id);
+                } else {
+                    var option = new Option(value.text, value.id, true, true);
+                    $select{{key}}.append(option);
+                }
+            }
+           });
+           $select{{key}}.trigger('change');
+          }
+          return data;
+        }
+{#        conf['ajax']['url'] +=#}
+    }
+    $select{{key}}.select2(conf)
 </script>
