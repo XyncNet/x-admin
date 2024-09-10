@@ -1,12 +1,12 @@
 from urllib.parse import unquote
 
 
-def parse_qs(qs) -> dict:
+def parse_qs(qs: str) -> dict:
     pairs = parse_qsl(qs)
     return {key: val for key, val in pairs}
 
 
-def parse_qsl(qs) -> list[tuple[str, str]]:
+def parse_qsl(qs: str) -> list[tuple[str, str]]:
     r = []
     query_args = qs.split('&') if qs else []
     for name_value in query_args:
@@ -24,7 +24,7 @@ def parse_qsl(qs) -> list[tuple[str, str]]:
     return r
 
 
-def parse_fs(fs) -> dict:
+def parse_fs(fs: str) -> dict:
     def recursive_update(d, keys, val):
         key = keys[0]
         if key.isdigit():

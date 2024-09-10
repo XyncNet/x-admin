@@ -33,7 +33,7 @@ document.getElementsByTagName('form')[0].onsubmit = async e => {
     fd.keys().forEach(k => {
         if (e.target[k].dataset?.type=='json') {data[k] = JSON.parse(data[k].replace(/'/g, '"'))}
         else if (k.endsWith('[]')) {data[k.replace('[]', '')] = fd.getAll(k).map(i => Number(i)); delete data[k]}
-        else if (!isNaN(parseFloat(data[k]))) {data[k] = Number(data[k])}
+        else if (parseFloat(data[k])==data[k]) {data[k] = Number(data[k])}
     })
     await fetch("/v2/{{ name }}{{ obj and '/'+(obj.pk | string) }}", {
         method: "{{ 'PATCH' if obj else 'PUT' }}",

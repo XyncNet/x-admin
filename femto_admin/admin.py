@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jinja2 import ChoiceLoader, FileSystemLoader, PackageLoader
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from redis.asyncio import Redis
+# from redis.asyncio import Redis
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.routing import Route
@@ -19,6 +19,7 @@ from starlette.templating import Jinja2Templates, _TemplateResponse
 from starlette.types import Lifespan
 from tortoise_api.api import Api
 from tortoise_api.loader import _repr
+from tortoise_api.oauth import OAuth
 from tortoise_api_model import Model
 from tortoise_api_model.pydantic import UserReg, PydList
 
@@ -57,7 +58,8 @@ class Admin(Api):
             debug: bool = False,
             title: str = "Admin",
             exc_models: {str} = None,
-            lifespan: Lifespan = None
+            lifespan: Lifespan = None,
+            oauth: OAuth = None
     ):
         """
         Parameters:
@@ -65,7 +67,7 @@ class Admin(Api):
             # auth_provider: Authentication Provider
         """
         # Api init
-        super().__init__(models_module, debug, title, exc_models, lifespan)
+        super().__init__(models_module, debug, title, exc_models, lifespan, oauth)
 
         self.set_templates()
 
@@ -111,20 +113,21 @@ class Admin(Api):
         return self.app
 
     # async def startup(self):
-        # self.app.redis = await Redis()
-
+    #     self.app.redis = await Redis()
+    #
     @staticmethod
     async def auth_middleware(request: Request):
-        path: str = request.scope["path"]
-        request.app.redis = await Redis()
-        redis: Redis = request.app.redis
+        # path: str = request.scope["path"]
+        # request.app.redis = await Redis()
+        # redis: Redis = request.app.redis
+        # todo: check only private paths
+        # todo: check token validity, not only existance
         if not (token := request.cookies.get('token')):
             raise HTTPException(
                 status_code=status.HTTP_303_SEE_OTHER,
-                headers={'Location': "/login"},
+                headers={'Location': "/login", 'set-cookie': 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT'},
                 detail="Not authenticated bruh"
             )
-        # return RedirectResponse(url='/login', status_code=status.HTTP_303_SEE_OTHER)
 
     def gen_routes(self):
         ar = APIRouter(dependencies=[Depends(self.auth_middleware)])
