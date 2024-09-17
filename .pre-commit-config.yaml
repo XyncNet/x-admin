@@ -1,0 +1,35 @@
+repos:
+- repo: local
+  hooks:
+  - id: tag
+    name: tag
+    ### make tag with next ver only if "fix" in commit_msg or starts with "feat"
+    entry: bash -c 'grep -e ^feat -e fix .git/COMMIT_EDITMSG && make patch || exit 0'
+    language: system
+    verbose: true
+    pass_filenames: false
+    stages: [post-commit]
+
+  - id: build
+    name: build
+    ### build & upload package only for "main" branch push
+    entry: bash -c 'echo $PRE_COMMIT_LOCAL_BRANCH | grep /main && make build || echo 0'
+    language: system
+    pass_filenames: false
+    verbose: true
+    require_serial: true
+    stages: [pre-push]
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  ### Ruff version.
+  rev: v0.6.4
+  hooks:
+    ### Run the linter.
+    - id: ruff
+      args: [--fix, --unsafe-fixes]
+      stages: [pre-commit]
+    ### Run the formatter.
+    - id: ruff-format
+      types_or: [python, pyi]
+      verbose: true
+      stages: [pre-commit]

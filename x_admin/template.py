@@ -1,10 +1,7 @@
-import os
-from datetime import date
 from typing import Any
 from urllib.parse import urlencode
 
 from jinja2 import pass_context, ChoiceLoader, FileSystemLoader, PackageLoader
-from starlette.requests import Request
 from starlette.templating import Jinja2Templates
 
 templates = Jinja2Templates("templates")

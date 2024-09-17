@@ -1,6 +1,6 @@
 [project]
-name = "femto-admin"
-requires-python = ">=3.10"
+name = "x-admin"
+requires-python = ">=3.11"
 authors = [
     {name = "Artemiev", email = "mixartemev@gmail.com"},
 ]
@@ -16,11 +16,26 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/mixartemev/femto-admin"
-Repository = "https://github.com/mixartemev/femto-admin"
+Homepage = "https://github.com/XyncNet/x-admin"
+Repository = "https://github.com/XyncNet/x-admin"
+
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["femto_admin"]
+packages = ["x_admin"]
 
-[tool.setuptools.dynamic]
-version = {attr = "femto_admin.__version__"}
+[tool.setuptools_scm]
+version_scheme = "python-simplified-semver" # if "feature" in `branch_name` SEMVER_MINOR++ else SEMVER_PATCH++
+local_scheme = "no-local-version"
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "twine",
+    "setuptools_scm",
+]
+
+[tool.ruff]
+line-length = 120

@@ -1,12 +1,12 @@
-# Femto Admin
+# X-Admin
 ###### Simplest fastest minimal ASGI CRUD Admin panel for Tortoise ORM models
 It's generating fully native async auto  zero config one line app 
 #### Requirements
-- Python >= 3.9
+- Python >= 3.11
 
 ### INSTALL
 ```bash
-pip install femto-admin
+pip install x-admin
 ```
 
 ### Run your app
@@ -28,7 +28,7 @@ class Post(Model):
 ```
 - Write run script `main.py`: pass your models module in Api app:
 ```python
-from femto_admin import Admin
+from x_admin import Admin
 import models
 
 app = Admin().start(models)
@@ -38,11 +38,11 @@ app = Admin().start(models)
 ```bash
 uvicorn main:app
 ```
-Or you can just fork Completed minimal runnable example from [sample apps](https://github.com/mixartemev/femto-admin/blob/master/sample_apps/minimal/).
+Or you can just fork Completed minimal runnable example from [sample apps](https://github.com/mixartemev/x-admin/blob/master/sample_apps/minimal/).
 
 #### And voila:
 You have menu with all your models at root app route: http://127.0.0.1:8000
 
 
 ---
-Made with ❤ on top of the [Starlette](https://www.starlette.io/), [TortoiseORM](https://tortoise.github.io/), [TortoiseAPI](https://pypi.org/project/tortoise-api/).
+Made with ❤ on top of the [Starlette](https://www.starlette.io/), [TortoiseORM](https://tortoise.github.io/), [X-API](https://pypi.org/project/tortoise-api/).

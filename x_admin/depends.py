@@ -1,11 +1,11 @@
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from fastapi.params import Path
 from starlette.requests import Request
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_401_UNAUTHORIZED
 from tortoise import Tortoise
 
 
-def get_model(resource: str|None = Path(...)):
+def get_model(resource: str | None = Path(...)):
     if not resource:
         return
     for app, models in Tortoise.apps.items():

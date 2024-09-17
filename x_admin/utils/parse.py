@@ -8,18 +8,18 @@ def parse_qs(qs: str) -> dict:
 
 def parse_qsl(qs: str) -> list[tuple[str, str]]:
     r = []
-    query_args = qs.split('&') if qs else []
+    query_args = qs.split("&") if qs else []
     for name_value in query_args:
         if not name_value:
             continue
-        nv = name_value.split('=', 1)
+        nv = name_value.split("=", 1)
         if len(nv) != 2:
             continue
         if len(nv[1]):
-            name = nv[0].replace('+', ' ')
-            name = unquote(name, encoding='utf-8', errors='replace')
-            value = nv[1].replace('+', ' ')
-            value = unquote(value, encoding='utf-8', errors='replace')
+            name = nv[0].replace("+", " ")
+            name = unquote(name, encoding="utf-8", errors="replace")
+            value = nv[1].replace("+", " ")
+            value = unquote(value, encoding="utf-8", errors="replace")
             r.append((name, value))
     return r
 
@@ -42,8 +42,8 @@ def parse_fs(fs: str) -> dict:
 
     result = {}
     for ky, v in parse_qsl(fs):
-        kys = ky.replace(']', '').split('[')
-        v = (float(v) if '.' in v else int(v)) if v.isdecimal() else v
+        kys = ky.replace("]", "").split("[")
+        v = (float(v) if "." in v else int(v)) if v.isdecimal() else v
         recursive_update(result, kys, v)
 
     return result
