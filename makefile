@@ -1,4 +1,4 @@
-PACKAGE := x_admin
+PACKAGE := femto_admin
 VENV := venv
 VPYTHON := . $(VENV)/bin/activate && python
 

@@ -24,8 +24,8 @@ from tortoise_api.oauth import OAuth, AuthException
 from tortoise_api_model import Model
 from tortoise_api_model.pydantic import UserReg, PydList
 
-from x_admin.utils.fmap import ffrom_pyd
-from x_admin.utils.parse import parse_fs
+from femto_admin.utils.fmap import ffrom_pyd
+from femto_admin.utils.parse import parse_fs
 
 
 class Dir(StrEnum):
@@ -73,15 +73,15 @@ class Admin(Api):
 
     def set_templates(self):
         templates = Jinja2Templates("templates")
-        templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("x_admin", "templates")])
+        templates.env.loader = ChoiceLoader([FileSystemLoader("templates"), PackageLoader("femto_admin", "templates")])
         templates.env.globals["title"] = self.title
-        templates.env.globals["meta"] = {"year": datetime.datetime.now().year}  # "ver": x_admin.__version__
+        templates.env.globals["meta"] = {"year": datetime.datetime.now().year}  # "ver": femto_admin.__version__
         templates.env.globals["minify"] = "" if self.debug else "min."
         templates.env.globals["models"] = self.models
         self.templates = templates
 
     def mount(self, static_dir: str = None, logo: str | bool = None, dash_func: callable = None):
-        (self.app.mount("/statics", StaticFiles(packages=["x_admin"]), name="public"),)
+        (self.app.mount("/statics", StaticFiles(packages=["femto_admin"]), name="public"),)
         if static_dir:
             assert static_dir != "statics", "Use any name for statics dir, but not `statics`"
             (self.app.mount("/" + static_dir, StaticFiles(directory=static_dir), name="my-public"),)
