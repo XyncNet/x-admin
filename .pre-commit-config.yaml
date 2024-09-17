@@ -13,7 +13,7 @@ repos:
   - id: build
     name: build
     ### build & upload package only for "main" branch push
-    entry: bash -c 'echo $PRE_COMMIT_LOCAL_BRANCH | grep /main && make build || echo 0'
+    entry: bash -c 'echo $PRE_COMMIT_LOCAL_BRANCH | grep /master && make build || echo 0'
     language: system
     pass_filenames: false
     verbose: true
